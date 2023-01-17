@@ -1,6 +1,6 @@
-import { IoObject, Str, Method, NIL } from "./object"
-import { Slot } from "./slot"
-import { evalStr, evalNode } from "./evaluator"
+import { evalNode, evalStr } from "./evaluator";
+import { IoObject, Method, NIL, Str } from "./object";
+import { Slot } from "./slot";
 
 /*
 class BuiltinFunction extends IoObject{
@@ -24,39 +24,32 @@ class BuiltinFunction extends IoObject{
 }
 */
 
-
 /* TODO
 evalNode
 macro
-typeof
 throw/catch
 print
 */
 
+export const IF = function (args: IoObject[], env: Slot): IoObject {
+  const [cond, trueCase, falseCase] = args;
+  if (evalNode(cond, env) !== NIL) return evalNode(trueCase, env);
+  else if (falseCase) return evalNode(falseCase, env);
+  else return NIL;
+};
 
-export const IF = function(args:IoObject[], env:Slot): IoObject{
-  const [cond, trueCase, falseCase] = args
-  if(evalNode(cond, env) !== NIL) return evalNode(trueCase, env)
-  else if(falseCase)              return evalNode(falseCase, env)
-  else                            return NIL
-}
+export const PRINT = function (args: IoObject[], env: Slot): IoObject {
+  console.log(args.map((arg) => evalNode(arg, env).str()).join(","));
+  return NIL;
+};
 
-export const PRINT = function(args:IoObject[], env:Slot): IoObject{
-  console.log(args.map(arg=>evalNode(arg,env).str()).join(","))
-  return NIL
-}
+export const FUN = function (args: IoObject[], env: Slot): IoObject {
+  return new Method(args, env);
+};
 
-export const FUN = function(args:IoObject[], env:Slot): IoObject{
-  return new Method(args, env)
-}
-
-export const EVAL_STR = function(args:IoObject[], env:Slot): IoObject{
-  if(args[0] instanceof Str){
-    return evalStr(args[0].value)
+export const EVAL_STR = function (args: IoObject[], env: Slot): IoObject {
+  if (args[0] instanceof Str) {
+    return evalStr(args[0].value);
   }
-  throw "ERROR EVAL_STR()"
-}
-
-
-
-
+  throw "ERROR EVAL_STR()";
+};

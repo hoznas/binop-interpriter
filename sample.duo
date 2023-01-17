@@ -1,0 +1,78 @@
+"duo言語のサンプル";
+
+"コメントがないのでプログラムに影響の無い位置に文字列を置く";
+
+"変数（変数の宣言と再代入で記号が異なる）";
+v := 1;
+v = v + 5;
+v.print();
+
+
+"数式処理";
+n := 1 + (2 - 3) * 4;
+n.print();
+
+"条件分岐"
+"nilのみが「偽」、他のすべてが「真」"
+if(n==7,
+  "seven",
+  "not seven"
+).print();
+
+"関数";
+add := fun(a,b,
+  c := a+b;
+  c.print();
+  "最後に評価した値が戻り値になる";
+  c);
+add(3,6).print()
+
+"ループ処理は再帰のみ";
+fact := fun(n,
+	"最後に評価した値がプログラムの戻り値となる"
+  if(n>1,
+    n * fact(n-1),
+    1));
+fact(4).print();
+
+
+"行末のセミコロンは省略可能。以下、省略して記載"
+
+"object（今はただの構造体）"
+createHuman := fun(name,age,
+  human := Object.clone()
+  "objectのプロパティへの代入はどちらを使っても構わない"
+  human.name = name
+  human.age := age
+  human
+)
+
+h1 := createHuman("foo", 40)
+h2 := h1.clone()
+h2.name = "bar"
+h2.age = 15
+"objectへの代入はコピー元に影響しない"
+h1.print()
+h2.print()
+
+"リスト構造の例（配列はありません）"
+cell := fun(a,b,
+	obj:=Object.clone()
+	obj.head:=a
+	obj.tail:=b
+	obj)
+
+list := fun(i,n,
+	if(i<n,
+		cell(i,list(i+1,n)),
+		nil));
+
+nums := list(0,10);
+nums.print();
+
+"リスト処理の例"
+sum := fun(lst,
+	if(lst,
+		lst.head + sum(lst.tail),
+		0));
+sum(nums).print();
