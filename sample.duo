@@ -28,6 +28,7 @@ add := fun(a,b,
 add(3,6).print()
 
 "ループ処理は再帰のみ";
+"末尾再帰の最適化はしていない";
 fact := fun(n,
 	"最後に評価した値がプログラムの戻り値となる"
   if(n>1,
@@ -38,12 +39,13 @@ fact(4).print();
 
 "行末のセミコロンは省略可能。以下、省略して記載"
 
-"object（今はただの構造体）"
+"object"
 createHuman := fun(name,age,
   human := Object.clone()
   "objectのプロパティへの代入はどちらを使っても構わない"
   human.name = name
   human.age := age
+  human.hello = fun("Hello " + this.name)
   human
 )
 
@@ -52,8 +54,8 @@ h2 := h1.clone()
 h2.name = "bar"
 h2.age = 15
 "objectへの代入はコピー元に影響しない"
-h1.print()
-h2.print()
+h1.hello().print()
+h2.hello().print()
 
 "リスト構造の例（配列はありません）"
 cell := fun(a,b,

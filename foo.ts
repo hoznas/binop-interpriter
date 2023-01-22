@@ -1,7 +1,5 @@
 import { readFileSync } from "fs";
 
-readFileSync;
-
 const terminator = /^(\n|;)/m;
 const str = /^("(?:[^"]*)")/m;
 

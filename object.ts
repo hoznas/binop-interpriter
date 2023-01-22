@@ -1,5 +1,5 @@
-import { evalNode } from "./evaluator";
-import { Slot } from "./slot";
+import { evalNode } from './evaluator';
+import { Slot } from './slot';
 
 export abstract class IoObject {
   abstract str(): string;
@@ -12,13 +12,13 @@ export abstract class IoObject {
     else return 0;
   }
   send(name: string, args: IoObject[] | undefined, e: Slot): IoObject {
-    if (name === "clone" && args?.length === 0) {
+    if (name === 'clone' && args?.length === 0) {
       return this;
-    } else if (name === "print" && args?.length === 0) {
+    } else if (name === 'print' && args?.length === 0) {
       console.log(this.str());
       return NIL;
     } else {
-      throw "[ERROR] IoObject::send()";
+      throw '[ERROR] IoObject::send()';
     }
   }
 }
@@ -31,8 +31,12 @@ export class Num extends IoObject {
     return this.value.toString();
   }
   compare(other: IoObject): number {
-    if (other instanceof Num) return this.value - other.value;
-    return super.compare(other);
+    if (other instanceof Num) {
+      const result = this.value - other.value;
+      if (result === 0) return 0;
+      else if (result < 0) return -1;
+      else return 1;
+    } else return super.compare(other);
   }
 }
 
@@ -63,7 +67,7 @@ export class Nil extends IoObject {
     super();
   }
   str(): string {
-    return "nil";
+    return 'nil';
   }
   compare(other: IoObject): number {
     if (other instanceof Nil) return 0;
@@ -96,7 +100,7 @@ export class Message extends IoObject {
   }
   str(): string {
     if (this.args) {
-      return this.name + "(" + this.args.map((e) => e.str()).join(", ") + ")";
+      return this.name + '(' + this.args.map((e) => e.str()).join(', ') + ')';
     } else {
       return this.name;
     }
@@ -110,7 +114,7 @@ export class Method extends IoObject {
   constructor(args: IoObject[], env: Slot) {
     super();
     if (args.length === 0) {
-      throw "new Method(no-argument)";
+      throw 'new Method(no-argument)';
     }
     this.body = args.pop()!;
     this.argList = args.map((a) => {
@@ -124,34 +128,15 @@ export class Method extends IoObject {
   }
   bind(values: IoObject[]): Slot {
     const closure = this.createdEnv.subSlot();
-    if (this.argList.length !== values.length) throw "ERROR arg length error.";
+    if (this.argList.length !== values.length) throw 'ERROR arg length error.';
     for (let i = 0; i < this.argList.length; i++) {
       closure.defineForce(this.argList[i], values[i]);
     }
     return closure;
   }
   str(): string {
-    const str = this.argList.length === 0 ? "" : this.argList.join(",") + ",";
-    return "fun(" + str + this.body.str() + ")";
-  }
-}
-
-export class Apply extends IoObject {
-  obj: IoObject;
-  argList: IoObject[];
-  constructor(obj: IoObject, argList: IoObject[]) {
-    super();
-    this.obj = obj;
-    this.argList = argList;
-  }
-  compare(other: IoObject): number {
-    if (this === other) return 0;
-    else return -1;
-  }
-  str(): string {
-    return (
-      this.obj.str() + "(" + this.argList.map((e) => e.str()).join(",") + ")"
-    );
+    const str = this.argList.length === 0 ? '' : this.argList.join(',') + ',';
+    return 'fun(' + str + this.body.str() + ')';
   }
 }
 
@@ -169,29 +154,51 @@ export class UserObject extends IoObject {
     const s = Object.keys(this.slot.slot)
       .map((k) => {
         const v = this.slot.slot[k];
-        return k + ":" + v.str();
+        return k + ':' + v.str();
       })
-      .join(",");
-    return "{" + s + "}";
+      .join(',');
+    return '{' + s + '}';
   }
-  send(name: string, args: IoObject[] | undefined, e: Slot): IoObject {
-    if (name === "clone" && args?.length === 0) {
+  send(name: string, values: IoObject[] | undefined, e: Slot): IoObject {
+    if (name === 'clone' && values?.length === 0) {
       return new UserObject(this.slot.subSlot());
-    } else if (name === "print" && args?.length === 0) {
+    } else if (name === 'print' && values?.length === 0) {
       console.log(this.str());
       return NIL;
-    } else if (!args) {
-      // get property
-      const result = this.get(name);
-      if (result) return result;
-      else throw "UserObject(no property)";
-    } else {
-      // method call
     }
-    console.log(this.str());
-    console.log(name);
-    throw "ERROR UserObject::send()";
+
+    const result = this.slot.get(name);
+    if (!values) {
+      // get property
+      if (result) return result;
+      else throw `UserObject::send(no property="${name}")`;
+    } else {
+      //method call
+      if (!result) throw `UserObject::send(no function="${name}")`;
+      else if (!(result instanceof Method))
+        throw `UserObject::send(not function="${name}")`;
+      else return this.call(result, values, e);
+    }
   }
+
+  call(m: Method, values: IoObject[], callerEnv: Slot): IoObject {
+    const newEnv = this.bind(
+      m,
+      values.map((v) => evalNode(v, callerEnv))
+    );
+    newEnv.defineForce('this', this);
+    return evalNode(m.body, newEnv);
+  }
+
+  bind(m: Method, values: IoObject[]): Slot {
+    const newEnv = this.slot.subSlot();
+    if (m.argList.length !== values.length) throw 'ERROR arg length error.';
+    for (let i = 0; i < m.argList.length; i++) {
+      newEnv.defineForce(m.argList[i], values[i]);
+    }
+    return newEnv;
+  }
+
   define(name: string, value: IoObject): IoObject | null {
     return this.slot.define(name, value);
   }
@@ -203,5 +210,39 @@ export class UserObject extends IoObject {
   }
   get(name: string): IoObject | null {
     return this.slot.get(name);
+  }
+}
+
+/*
+  call(argList: IoObject[], callerEnv: Slot): IoObject {
+    const closure = this.bind(argList.map((arg) => evalNode(arg, callerEnv)));
+    return evalNode(this.body, closure);
+  }
+  bind(values: IoObject[]): Slot {
+    const closure = this.createdEnv.subSlot();
+    if (this.argList.length !== values.length) throw "ERROR arg length error.";
+    for (let i = 0; i < this.argList.length; i++) {
+      closure.defineForce(this.argList[i], values[i]);
+    }
+    return closure;
+  }
+   */
+
+export class Apply extends IoObject {
+  obj: IoObject;
+  argList: IoObject[];
+  constructor(obj: IoObject, argList: IoObject[]) {
+    super();
+    this.obj = obj;
+    this.argList = argList;
+  }
+  compare(other: IoObject): number {
+    if (this === other) return 0;
+    else return -1;
+  }
+  str(): string {
+    return (
+      this.obj.str() + '(' + this.argList.map((e) => e.str()).join(',') + ')'
+    );
   }
 }

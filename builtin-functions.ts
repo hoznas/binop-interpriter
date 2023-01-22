@@ -1,6 +1,6 @@
-import { evalNode, evalStr } from "./evaluator";
-import { IoObject, Method, NIL, Str } from "./object";
-import { Slot } from "./slot";
+import { evalNode, evalStr } from './evaluator';
+import { IoObject, Method, NIL, Str } from './object';
+import { Slot } from './slot';
 
 /*
 class BuiltinFunction extends IoObject{
@@ -38,11 +38,6 @@ export const IF = function (args: IoObject[], env: Slot): IoObject {
   else return NIL;
 };
 
-export const PRINT = function (args: IoObject[], env: Slot): IoObject {
-  console.log(args.map((arg) => evalNode(arg, env).str()).join(","));
-  return NIL;
-};
-
 export const FUN = function (args: IoObject[], env: Slot): IoObject {
   return new Method(args, env);
 };
@@ -51,5 +46,5 @@ export const EVAL_STR = function (args: IoObject[], env: Slot): IoObject {
   if (args[0] instanceof Str) {
     return evalStr(args[0].value);
   }
-  throw "ERROR EVAL_STR()";
+  throw 'ERROR EVAL_STR()';
 };
