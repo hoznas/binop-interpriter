@@ -20,12 +20,12 @@ if(n==7,
 ).print();
 
 "関数";
-add := fun(a,b,
+addPrint := fun(a,b,
   c := a+b;
   c.print();
   "最後に評価した値が戻り値になる";
   c);
-add(3,6).print()
+addPrint(3,6)
 
 "ループ処理は再帰のみ";
 "末尾再帰の最適化はしていない";
@@ -39,17 +39,28 @@ fact(4).print();
 
 "行末のセミコロンは省略可能。以下、省略して記載"
 
+make := fun(n:=0;fun(n=n+1))
+counter1 := make()
+counter1().print()
+counter2 := make()
+counter1().print()
+counter2().print()
+counter2().print()
+
+
 "object"
-createHuman := fun(name,age,
-  human := Object.clone()
+Dog := fun(name,age,
+  dog := Object.clone()
   "objectのプロパティへの代入はどちらを使っても構わない"
-  human.name = name
-  human.age := age
-  human.hello = fun("Hello " + this.name)
-  human
+  dog.name = name
+  dog.age := age
+  dog.hello = fun("Hello " + this.name)
+  dog
 )
 
-h1 := createHuman("foo", 40)
+
+h1 := Dog("foo", 40)
+h3 := Dog("foo", 40)
 h2 := h1.clone()
 h2.name = "bar"
 h2.age = 15

@@ -51,36 +51,36 @@ function parserTest() {
     ['123', '123'],
     ['"abc def"', '"abc def"'],
     ['abc', 'abc'],
-    ['1+2', '(+ 1 2)'],
-    ['1+2*3', '(+ 1 (* 2 3))'],
-    ['(1+2)*3', '(* (+ 1 2) 3)'],
-    ['1.print', '(. 1 print)'],
-    ['1.print;2.print;', '(; (. 1 print) (. 2 print))'],
-    ['print;print()\nprint(1+2)', '(; (; print print()) print((+ 1 2)))'],
+    ['1+2', '1.+(2)'],
+    ['1+2*3', '1.+(2.*(3))'],
+    ['(1+2)*3', '1.+(2).*(3)'],
+    ['1.print', '1.print'],
+    ['1.print;2.print();', '1.print.;(2.print())'],
+    ['print;print()\nprint(1+2)', 'print.;(print()).;(print(1.+(2)))'],
     [
       'i:=0;while(i<10,x:=i*2;x.println)',
-      '(; (:= i 0) while((< i 10), (; (:= x (* i 2)) (. x println))))',
+      'i.:=(0).;(while(i.<(10), x.:=(i.*(2)).;(x.println)))',
     ],
     ['print', 'print'],
     ['print()', 'print()'],
     ['print(1)', 'print(1)'],
     ['print(1,2)', 'print(1, 2)'],
-    ['Object.clone().clone()', '(. (. Object clone()) clone())'],
+    ['Object.clone().clone()', 'Object.clone().clone()'],
   ];
   for (const test of tests) {
     const [code, mustbe] = test;
+    //console.log('>>>>>' + code);
     const tokens = tokenize(code);
     const exp = parse(tokens);
     const result_str = exp.str();
     if (result_str !== mustbe) {
-      console.log('ERROR');
+      console.log('PARSE ERROR');
       console.log('code  =' + code);
       console.log('result=' + result_str);
       console.log('mustbe=' + mustbe);
       return;
     }
   }
-
   console.log('[PARSER] All tests are OK.');
 }
 
@@ -121,10 +121,10 @@ function evaluatorTest() {
     ['1 + 1;2*4', '8'],
     ['a := 5; a*4', '20'],
     ['b := 5; b=b+1; b', '6'],
-    ['(1+2).print()', 'nil'], // print "1,2"
-    ['fun((1+2).print())', 'fun((. (+ 1 2) print()))'],
+    ['(1+2).print()', 'nil'], // print "3"
+    ['fun((1+2).print())', 'fun(1.+(2).print())'],
     ['f:=fun((1+2).print());f()', 'nil'], // print "3"
-    ['fun(a,b,(a+b).print())', 'fun(a,b,(. (+ a b) print()))'],
+    ['fun(a,b,(a+b).print())', 'fun(a,b,a.+(b).print())'],
     ['add:=fun(a,b,a+b);add(6/3,2)', '4'],
     ['2>1', '1'],
     ['if(2>1,r:="big",r:="small");r', '"big"'],
@@ -154,6 +154,7 @@ function evaluatorTest() {
 
   const e = new Evaluator();
   for (let [code, mustbe] of tests) {
+    //console.log(`>>>>>>>` + code);
     const result = e.eval(code).str();
     if (result !== mustbe) {
       console.log('[CODE]' + code);

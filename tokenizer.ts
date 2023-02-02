@@ -17,7 +17,7 @@ export const isBinOp = (t: Token) => {
   return t && t.type === 'binop';
 };
 
-const binop = /^(<=>|<=|>=|==|!=|:=|&&|\|\||[.*%+\-\/<>=,])/m; // Binary Operator
+const binop = /^(<=|>=|==|!=|:=|&&|\|\||[.*%+\-\/<>=,])/m; // Binary Operator
 const terminator = /^(\n|;)/m;
 const whiteSpace = /^([ \t])/m;
 const num = /^(\d+)/m;

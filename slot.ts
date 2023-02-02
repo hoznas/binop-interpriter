@@ -1,4 +1,4 @@
-import { IoObject } from "./object";
+import { IoObject } from './object';
 
 type map = { [key: string]: IoObject };
 

@@ -1,4 +1,3 @@
-import { evalNode } from './evaluator';
 import { Slot } from './slot';
 
 export abstract class IoObject {
@@ -11,15 +10,8 @@ export abstract class IoObject {
     if (s1 > s2) return 1;
     else return 0;
   }
-  send(name: string, args: IoObject[] | undefined, e: Slot): IoObject {
-    if (name === 'clone' && args?.length === 0) {
-      return this;
-    } else if (name === 'print' && args?.length === 0) {
-      console.log(this.str());
-      return NIL;
-    } else {
-      throw '[ERROR] IoObject::send()';
-    }
+  clone(): IoObject {
+    return this;
   }
 }
 
@@ -79,72 +71,79 @@ export class Nil extends IoObject {
 }
 export const NIL = Nil.getInstance();
 
-export class BinOp extends IoObject {
-  // op --- operator
-  // lhs, rhs --- left/right hand side
-  constructor(public op: string, public lhs: IoObject, public rhs: IoObject) {
-    super();
-  }
-  str(): string {
-    return `(${this.op} ${this.lhs.str()} ${this.rhs.str()})`;
-  }
-}
-
 export class Message extends IoObject {
+  target: IoObject | undefined;
   name: string;
   args?: IoObject[];
-  constructor(name: string, args?: IoObject[]) {
+  constructor(target: IoObject | undefined, name: string, args?: IoObject[]) {
     super();
-    this.name = name;
-    this.args = args;
+    if (name !== '.') {
+      this.target = target;
+      this.name = name;
+      this.args = args;
+    } else if (args?.length === 1 && args[0] instanceof Message) {
+      this.target = target;
+      this.name = args[0].name;
+      this.args = args[0].args;
+    } else {
+      throw 'new Message()';
+    }
   }
   str(): string {
+    const targetStr = this.target ? this.target.str() : '';
+    let argsStr: string;
     if (this.args) {
-      return this.name + '(' + this.args.map((e) => e.str()).join(', ') + ')';
+      argsStr = '(' + this.args.map((e) => e.str()).join(', ') + ')';
     } else {
-      return this.name;
+      argsStr = '';
     }
+    if (this.name === '.' && this.args?.length === 1)
+      return targetStr + '.' + this.args![0].str();
+    else if (this.target === undefined) return this.name + argsStr;
+    else return targetStr + '.' + this.name + argsStr;
   }
 }
 
 export class Method extends IoObject {
-  argList: string[];
-  body: IoObject;
-  createdEnv: Slot;
+  private _argList: string[];
+  private _body: IoObject;
+  private _createdEnv: Slot;
   constructor(args: IoObject[], env: Slot) {
     super();
     if (args.length === 0) {
+      console.log(args);
+      console.log(args.map((x) => x.str()).join(','));
       throw 'new Method(no-argument)';
     }
-    this.body = args.pop()!;
-    this.argList = args.map((a) => {
+    this._body = args.pop()!;
+    this._argList = args.map((a) => {
       return (a as Message).name;
     });
-    this.createdEnv = env;
+    this._createdEnv = env;
   }
-  call(argList: IoObject[], callerEnv: Slot): IoObject {
-    const closure = this.bind(argList.map((arg) => evalNode(arg, callerEnv)));
-    return evalNode(this.body, closure);
-  }
-  bind(values: IoObject[]): Slot {
-    const closure = this.createdEnv.subSlot();
-    if (this.argList.length !== values.length) throw 'ERROR arg length error.';
-    for (let i = 0; i < this.argList.length; i++) {
-      closure.defineForce(this.argList[i], values[i]);
-    }
-    return closure;
-  }
+
   str(): string {
-    const str = this.argList.length === 0 ? '' : this.argList.join(',') + ',';
-    return 'fun(' + str + this.body.str() + ')';
+    const str = this._argList.length === 0 ? '' : this._argList.join(',') + ',';
+    return 'fun(' + str + this._body.str() + ')';
+  }
+  get argList(): string[] {
+    return this._argList;
+  }
+  get body(): IoObject {
+    return this._body;
+  }
+  get createdEnv(): Slot {
+    return this._createdEnv;
   }
 }
 
 export class UserObject extends IoObject {
   slot: Slot;
-  constructor(slot: Slot) {
+  proto?: UserObject;
+  constructor(slot: Slot, proto?: UserObject) {
     super();
     this.slot = slot;
+    this.proto = proto;
   }
   compare(other: IoObject): number {
     if (this === other) return 0;
@@ -159,44 +158,9 @@ export class UserObject extends IoObject {
       .join(',');
     return '{' + s + '}';
   }
-  send(name: string, values: IoObject[] | undefined, e: Slot): IoObject {
-    if (name === 'clone' && values?.length === 0) {
-      return new UserObject(this.slot.subSlot());
-    } else if (name === 'print' && values?.length === 0) {
-      console.log(this.str());
-      return NIL;
-    }
 
-    const result = this.slot.get(name);
-    if (!values) {
-      // get property
-      if (result) return result;
-      else throw `UserObject::send(no property="${name}")`;
-    } else {
-      //method call
-      if (!result) throw `UserObject::send(no function="${name}")`;
-      else if (!(result instanceof Method))
-        throw `UserObject::send(not function="${name}")`;
-      else return this.call(result, values, e);
-    }
-  }
-
-  call(m: Method, values: IoObject[], callerEnv: Slot): IoObject {
-    const newEnv = this.bind(
-      m,
-      values.map((v) => evalNode(v, callerEnv))
-    );
-    newEnv.defineForce('this', this);
-    return evalNode(m.body, newEnv);
-  }
-
-  bind(m: Method, values: IoObject[]): Slot {
-    const newEnv = this.slot.subSlot();
-    if (m.argList.length !== values.length) throw 'ERROR arg length error.';
-    for (let i = 0; i < m.argList.length; i++) {
-      newEnv.defineForce(m.argList[i], values[i]);
-    }
-    return newEnv;
+  clone(): UserObject {
+    return new UserObject(this.slot.subSlot(), this);
   }
 
   define(name: string, value: IoObject): IoObject | null {
@@ -210,39 +174,5 @@ export class UserObject extends IoObject {
   }
   get(name: string): IoObject | null {
     return this.slot.get(name);
-  }
-}
-
-/*
-  call(argList: IoObject[], callerEnv: Slot): IoObject {
-    const closure = this.bind(argList.map((arg) => evalNode(arg, callerEnv)));
-    return evalNode(this.body, closure);
-  }
-  bind(values: IoObject[]): Slot {
-    const closure = this.createdEnv.subSlot();
-    if (this.argList.length !== values.length) throw "ERROR arg length error.";
-    for (let i = 0; i < this.argList.length; i++) {
-      closure.defineForce(this.argList[i], values[i]);
-    }
-    return closure;
-  }
-   */
-
-export class Apply extends IoObject {
-  obj: IoObject;
-  argList: IoObject[];
-  constructor(obj: IoObject, argList: IoObject[]) {
-    super();
-    this.obj = obj;
-    this.argList = argList;
-  }
-  compare(other: IoObject): number {
-    if (this === other) return 0;
-    else return -1;
-  }
-  str(): string {
-    return (
-      this.obj.str() + '(' + this.argList.map((e) => e.str()).join(',') + ')'
-    );
   }
 }
