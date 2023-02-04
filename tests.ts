@@ -1,7 +1,7 @@
 import { Evaluator } from './evaluator';
+import { Memory } from './memory';
 import { Num } from './object';
 import { parse } from './parser';
-import { Slot } from './slot';
 import { tokenize } from './tokenizer';
 
 function main() {
@@ -85,8 +85,8 @@ function parserTest() {
 }
 
 function slotTest() {
-  const env = new Slot();
-  const sub = env.subSlot();
+  const env = new Memory();
+  const sub = env.subMemory();
   env.define('one', new Num(1));
   env.define('two', new Num(2));
   sub.define('three', new Num(3));
@@ -104,7 +104,7 @@ function slotTest() {
   if (sub.update('one', new Num(1)) && env.get('one')!.str() !== '1') {
     throw 'D';
   }
-  console.log('[SLOT] all tests are ok.');
+  console.log('[MEMORY] all tests are ok.');
 }
 
 function evaluatorTest() {
@@ -137,6 +137,7 @@ function evaluatorTest() {
     ['123.clone()', '123'],
     ['o:=Object.clone();o.x:=1', '1'],
     ['o', '{x:1}'],
+    ['o.x', '1'],
     ['cons:=fun(a,b,o:=Object.clone();o.car=a;o.cdr=b;o);1', '1'],
     ['cons(1,2)', '{car:1,cdr:2}'],
     ['list:=fun(i,n,if(i<n,cons(i,list(i+1,n)),nil));1', '1'],

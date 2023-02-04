@@ -1,50 +1,21 @@
 import { evalNode, evalStr } from './evaluator';
-import { IoObject, Method, NIL, Str } from './object';
-import { Slot } from './slot';
+import { Memory } from './memory';
+import { Fun, IoObject, NIL, Str } from './object';
 
-/*
-class BuiltinFunction extends IoObject{
-  name: string
-  func: Function
-  constructor(name: string, func: Function){
-    super()
-    this.name = name
-    this.func = func
-
-  }
-  str(): string{
-    return this.name
-  }
-  compare(other: IoObject): Number{
-    if(other instanceof BuiltinFunction && this.name == other.name){
-      return 0
-    }
-    return -1
-  }
-}
-*/
-
-/* TODO
-evalNode
-macro
-throw/catch
-print
-*/
-
-export const IF = function (args: IoObject[], env: Slot): IoObject {
+export const IF = function (args: IoObject[], env: Memory): IoObject {
   const [cond, trueCase, falseCase] = args;
   if (evalNode(cond, env) !== NIL) return evalNode(trueCase, env);
   else if (falseCase) return evalNode(falseCase, env);
   else return NIL;
 };
 
-export const FUN = function (args: IoObject[], env: Slot): IoObject {
-  return new Method(args, env);
+export const FUN = function (args: IoObject[], env: Memory): IoObject {
+  return new Fun(args, env);
 };
 
-export const EVAL_STR = function (args: IoObject[], env: Slot): IoObject {
+export const EVAL_STR = function (args: IoObject[], env: Memory): IoObject {
   if (args[0] instanceof Str) {
-    return evalStr(args[0].value);
+    return evalStr(args[0].value, env);
   }
-  throw 'ERROR EVAL_STR()';
+  throw `ERROR EVAL_STR(${args[0]})`;
 };

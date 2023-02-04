@@ -1,4 +1,4 @@
-import { Slot } from './slot';
+import { Memory } from './memory';
 
 export abstract class IoObject {
   abstract str(): string;
@@ -86,7 +86,9 @@ export class Message extends IoObject {
       this.name = args[0].name;
       this.args = args[0].args;
     } else {
-      throw 'new Message()';
+      throw `ERROR new Message(${target?.str()},${name},${args
+        ?.map((e) => e.str())
+        .join()})`;
     }
   }
   str(): string {
@@ -104,45 +106,35 @@ export class Message extends IoObject {
   }
 }
 
-export class Method extends IoObject {
-  private _argList: string[];
-  private _body: IoObject;
-  private _createdEnv: Slot;
-  constructor(args: IoObject[], env: Slot) {
+export class Fun extends IoObject {
+  argList: string[];
+  body: IoObject;
+  createdEnv: Memory;
+  constructor(args: IoObject[], env: Memory) {
     super();
     if (args.length === 0) {
-      console.log(args);
-      console.log(args.map((x) => x.str()).join(','));
-      throw 'new Method(no-argument)';
+      throw 'ERROR new Method(no-argument)';
     }
-    this._body = args.pop()!;
-    this._argList = args.map((a) => {
-      return (a as Message).name;
+    this.body = args[args.length - 1];
+    this.argList = args.slice(0, args.length - 1).map((e) => {
+      if (e instanceof Message && !e.target && !e.args) return e.name;
+      else throw `ERROR new Fun() => argument must be Str. value=${e.str()}`;
     });
-    this._createdEnv = env;
+    this.createdEnv = env;
   }
-
   str(): string {
-    const str = this._argList.length === 0 ? '' : this._argList.join(',') + ',';
-    return 'fun(' + str + this._body.str() + ')';
-  }
-  get argList(): string[] {
-    return this._argList;
-  }
-  get body(): IoObject {
-    return this._body;
-  }
-  get createdEnv(): Slot {
-    return this._createdEnv;
+    const argStr =
+      this.argList.length === 0 ? '' : this.argList.join(',') + ',';
+    return `fun(${argStr}${this.body.str()})`;
   }
 }
 
 export class UserObject extends IoObject {
-  slot: Slot;
+  memory: Memory;
   proto?: UserObject;
-  constructor(slot: Slot, proto?: UserObject) {
+  constructor(slot: Memory, proto?: UserObject) {
     super();
-    this.slot = slot;
+    this.memory = slot;
     this.proto = proto;
   }
   compare(other: IoObject): number {
@@ -150,29 +142,26 @@ export class UserObject extends IoObject {
     else return -1;
   }
   str(): string {
-    const s = Object.keys(this.slot.slot)
-      .map((k) => {
-        const v = this.slot.slot[k];
+    const s = [...this.memory.slots.entries()]
+      .map(([k, v]) => {
         return k + ':' + v.str();
       })
       .join(',');
     return '{' + s + '}';
   }
-
   clone(): UserObject {
-    return new UserObject(this.slot.subSlot(), this);
+    return new UserObject(this.memory.subMemory(), this);
   }
-
   define(name: string, value: IoObject): IoObject | null {
-    return this.slot.define(name, value);
+    return this.memory.define(name, value);
   }
   update(name: string, value: IoObject): IoObject | null {
-    return this.slot.update(name, value);
+    return this.memory.update(name, value);
   }
   assignToObject(name: string, value: IoObject): IoObject {
-    return this.slot.defineForce(name, value);
+    return this.memory.defineForce(name, value);
   }
-  get(name: string): IoObject | null {
-    return this.slot.get(name);
+  get(name: string): IoObject | undefined {
+    return this.memory.get(name);
   }
 }

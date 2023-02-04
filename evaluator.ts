@@ -1,109 +1,110 @@
 import { FUN, IF } from './builtin-functions';
-import { IoObject, Message, Method, NIL, Num, Str, UserObject } from './object';
+import { Memory } from './memory';
+import { Fun, IoObject, Message, NIL, Num, Str, UserObject } from './object';
 import { parse } from './parser';
-import { Slot } from './slot';
 import { tokenize } from './tokenizer';
 
 export class Evaluator {
-  rootSlot: Slot;
-  objectSlot: Slot;
+  rootEnvironmentSlot: Memory;
+  rootObjectSlot: Memory;
   constructor() {
-    this.rootSlot = new Slot();
-    this.objectSlot = new Slot();
-    this.rootSlot.define('Object', new UserObject(this.objectSlot));
-    this.rootSlot.define('nil', NIL);
+    this.rootEnvironmentSlot = new Memory();
+    this.rootObjectSlot = new Memory();
+    this.rootEnvironmentSlot.define(
+      'Object',
+      new UserObject(this.rootObjectSlot)
+    );
+    this.rootEnvironmentSlot.define('nil', NIL);
   }
   eval(code: string): IoObject {
-    return evalStr(code, this.rootSlot);
+    return evalStr(code, this.rootEnvironmentSlot);
   }
 }
 
-export function evalStr(code: string, env: Slot = new Slot()): IoObject {
+export function evalStr(code: string, env: Memory = new Memory()): IoObject {
   const tokens = tokenize(code);
   const node = parse(tokens);
   return evalNode(node, env);
 }
 
-export function evalNode(node: IoObject, e: Slot): IoObject {
-  console.log(`evalNode(${node.str()})`);
+export function evalNode(node: IoObject, env: Memory): IoObject {
+  //console.log(`evalNode(${node.str()})`);
   // eval binary operator
   if (node instanceof Message && node.target && node.args?.length === 1) {
     const [lhs, op, rhs] = [node.target, node.name, node.args[0]];
     if (['+', '-', '*', '/', '%'].includes(op)) {
-      return evalArithmeticOp(lhs, op, rhs, e);
+      return evalArithmeticOp(lhs, op, rhs, env);
     } else if (['==', '!=', '<', '<=', '>', '>='].includes(op)) {
-      return evalCompareOp(lhs, op, rhs, e);
+      return evalCompareOp(lhs, op, rhs, env);
     } else if (['=', ':=', '.', ';', ',', '&&', '||'].includes(op)) {
-      return evalSpecialOp(lhs, op, rhs, e);
+      return evalSpecialOp(lhs, op, rhs, env);
     }
   }
   if (node instanceof Message) {
-    return evalMessage(node, e);
+    return evalMessage(node, env);
   } else {
     // Num,Str,Nil,UserObject,Method
     return node;
   }
 }
 
-export function evalMessage(mes: Message, e: Slot): IoObject {
+export function evalMessage(mes: Message, env: Memory): IoObject {
   //console.log(`evalMessage(${mes.str()})`);
   if (!mes.target && mes.name === 'fun' && mes.args) {
-    console.log('FUN');
-    console.log(mes.str());
-    const f = FUN(mes.args, e);
-    console.log(f.str());
+    const f = FUN(mes.args, env);
     return f;
   } else if (!mes.target && mes.name === 'if' && mes.args) {
-    return IF(mes.args, e);
+    return IF(mes.args, env);
   } else if (mes.target && mes.name === 'print' && mes.args?.length === 0) {
-    console.log(evalNode(mes.target, e).str());
+    console.log(evalNode(mes.target, env).str());
     return NIL;
   } else if (mes.target && mes.name === 'clone' && mes.args?.length === 0) {
-    return evalNode(mes.target, e).clone();
+    return evalNode(mes.target, env).clone();
   }
 
-  const target = mes.target ? evalNode(mes.target, e) : null;
-  let foo: IoObject | null = NIL;
+  const target = mes.target ? evalNode(mes.target, env) : undefined;
+  let foo: IoObject | undefined = NIL;
   if (target && target instanceof UserObject) {
     foo = target.get(mes.name);
   } else {
-    foo = e.get(mes.name);
+    foo = env.get(mes.name);
   }
   if (!foo) {
-    throw `evalMessage(A)`;
+    throw `ERROR evalMessage(${mes.str()})`;
   }
-  if (foo instanceof Method && mes.args) {
-    return evalMethodCall(target as UserObject, foo, mes.args, e);
+  if (foo instanceof Fun && mes.args) {
+    return evalMethodCall(target as UserObject, foo, mes.args, env);
   } else if (!mes.args) {
     return foo;
   } else {
-    throw `evalMessage(B)`;
+    throw `ERROR evalMessage() => unknown`;
   }
 }
 
 function evalMethodCall(
   _this: UserObject | undefined,
-  m: Method,
+  fun: Fun,
   args: IoObject[],
-  callerEnv: Slot
+  callerEnv: Memory
 ): IoObject {
   const closure = bind(
     _this,
-    m.argList,
+    fun.argList,
     args.map((arg) => evalNode(arg, callerEnv)),
-    m.createdEnv.subSlot()
+    fun.createdEnv.subMemory()
   );
-  return evalNode(m.body, closure);
+  return evalNode(fun.body, closure);
 }
 
 function bind(
   _this: UserObject | undefined,
   argList: string[],
   values: IoObject[],
-  createdEnv: Slot
-): Slot {
-  const closure = createdEnv.subSlot();
-  if (argList.length !== values.length) throw 'ERROR arg length error.';
+  createdEnv: Memory
+): Memory {
+  const closure = createdEnv.subMemory();
+  if (argList.length !== values.length)
+    throw 'ERROR bind() => arg length error.';
   for (let i = 0; i < argList.length; i++) {
     closure.defineForce(argList[i], values[i]);
   }
@@ -115,38 +116,38 @@ function evalSpecialOp(
   lhs: IoObject,
   op: string,
   rhs: IoObject,
-  e: Slot
+  env: Memory
 ): IoObject {
   //console.log(`evalSpecialOp(${lhs.str()} ${op} ${rhs.str()})`);
   //= := . ; , && ||
   if (op === '&&') {
-    const elhs = evalNode(lhs, e);
-    return elhs === NIL ? NIL : evalNode(rhs, e);
+    const elhs = evalNode(lhs, env);
+    return elhs === NIL ? NIL : evalNode(rhs, env);
   } else if (op === '||') {
-    const elhs = evalNode(rhs, e);
-    return elhs !== NIL ? elhs : evalNode(rhs, e);
+    const elhs = evalNode(rhs, env);
+    return elhs !== NIL ? elhs : evalNode(rhs, env);
   } else if (op === ';') {
-    evalNode(lhs, e);
-    return evalNode(rhs, e);
+    evalNode(lhs, env);
+    return evalNode(rhs, env);
   } else if (op === ':=' && lhs instanceof Message) {
-    return evalAssign('define', lhs, evalNode(rhs, e), e);
+    return evalAssign('define', lhs, evalNode(rhs, env), env);
   } else if (op === '=' && lhs instanceof Message) {
-    return evalAssign('update', lhs, evalNode(rhs, e), e);
+    return evalAssign('update', lhs, evalNode(rhs, env), env);
   } else if (op === '.') {
-    throw `[ERROR] internal error operator[.](${op} ${lhs.str()} ${rhs.str()})`;
-  } else if (op === ',') {
-    throw `[ERROR] internal error operator[,](${op} ${lhs.str()} ${rhs.str()})`;
+    throw `ERROR evalSpecialOp(${lhs.str()} ${op} ${rhs.str()}) internal error operator[.]`;
+  } else {
+    // op === ','
+    throw `ERROR evalSpecialOp(${lhs.str()} ${op} ${rhs.str()}) internal error operator[,]`;
   }
-  throw 'evalSpecialOp()';
 }
 function evalArithmeticOp(
   lhs: IoObject,
   op: string,
   rhs: IoObject,
-  e: Slot
+  env: Memory
 ): IoObject {
   //console.log(`evalArithmeticOp(${elhs.str()} ${op} ${erhs.str()})`);
-  const [elhs, erhs] = [evalNode(lhs, e), evalNode(rhs, e)];
+  const [elhs, erhs] = [evalNode(lhs, env), evalNode(rhs, env)];
   if (op === '+' && elhs instanceof Str) return elhs.concat(erhs);
   if (elhs instanceof Num && (erhs instanceof Num || erhs instanceof Str)) {
     const n = erhs instanceof Num ? erhs.value : Number(erhs.value);
@@ -154,18 +155,19 @@ function evalArithmeticOp(
     if (op === '-') return new Num(elhs.value - n);
     if (op === '*') return new Num(elhs.value * n);
     if (op === '/') return new Num(elhs.value / n);
-    if (op === '%') return new Num(elhs.value % n);
+    //op === '%'
+    return new Num(elhs.value % n);
   }
-  throw 'evalArithmeticOp()';
+  throw `ERROR evalArithmeticOp(${lhs.str()} ${op} ${rhs.str()})`;
 }
 function evalCompareOp(
   lhs: IoObject,
   op: string,
   rhs: IoObject,
-  e: Slot
+  env: Memory
 ): IoObject {
   //console.log(`evalCompareOp(${op},${elhs.str()},${erhs.str()})`);
-  const [elhs, erhs] = [evalNode(lhs, e), evalNode(rhs, e)];
+  const [elhs, erhs] = [evalNode(lhs, env), evalNode(rhs, env)];
   const cmp = elhs.compare(erhs);
   const t = new Num(1);
   if (op === '==') return cmp === 0 ? t : NIL;
@@ -173,30 +175,30 @@ function evalCompareOp(
   if (op === '<') return cmp < 0 ? t : NIL;
   if (op === '<=') return cmp <= 0 ? t : NIL;
   if (op === '>') return cmp > 0 ? t : NIL;
-  if (op === '>=') return cmp >= 0 ? t : NIL;
-  throw 'evalArithmeticOp()';
+  // op === '>='
+  return cmp >= 0 ? t : NIL;
 }
 
 function evalAssign(
   flag: 'define' | 'update',
   message: Message,
   value: IoObject,
-  e: Slot
+  env: Memory
 ): IoObject {
   //console.log(`evalAssign(${flag},${target.str()},${value.str()})`)
   if (message.target) {
-    const assignTarget = evalNode(message.target, e);
+    const assignTarget = evalNode(message.target, env);
     if (assignTarget instanceof UserObject && !message.args) {
       return assignObjectSlot(assignTarget, message.name, value);
     }
   } else {
     if (!message.args) {
-      const result = assignLocalVariable(flag, message.name, value, e);
+      const result = assignLocalVariable(flag, message.name, value, env);
       if (result) return result;
-      throw 'ERROR evalAssign()    assign error';
+      throw 'ERROR evalAssign() assign error';
     }
   }
-  throw 'ERROR evalAssign()    obj.method() = value is not supported';
+  throw 'ERROR evalAssign() ';
 }
 function assignObjectSlot(
   targetObj: UserObject,
@@ -211,9 +213,9 @@ function assignLocalVariable(
   flag: 'define' | 'update',
   varName: string,
   value: IoObject,
-  e: Slot
+  env: Memory
 ): IoObject | null {
   //console.log(`assignLocalVariable(${flag},${varName},${value.str()})`);
-  if (flag === 'define') return e.define(varName, value);
-  else return e.update(varName, value);
+  if (flag === 'define') return env.define(varName, value);
+  else return env.update(varName, value);
 }

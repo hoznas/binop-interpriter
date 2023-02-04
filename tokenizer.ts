@@ -5,16 +5,16 @@ export type Token = {
 export type TokenType = '(' | ')' | 'sym' | 'num' | 'str' | 'binop';
 
 export const isTerminator = (t: Token) => {
-  return t && t.type === 'binop' && (t.value === ';' || t.value === '\n');
+  return t.type === 'binop' && (t.value === ';' || t.value === '\n');
 };
 export const isLPar = (t: Token) => {
-  return t && t.type === '(';
+  return t.type === '(';
 };
 export const isRPar = (t: Token) => {
-  return t && t.type === ')';
+  return t.type === ')';
 };
 export const isBinOp = (t: Token) => {
-  return t && t.type === 'binop';
+  return t.type === 'binop';
 };
 
 const binop = /^(<=|>=|==|!=|:=|&&|\|\||[.*%+\-\/<>=,])/m; // Binary Operator
@@ -25,6 +25,28 @@ const str = /^("(?:[^"]*)")/m;
 const sym = /^([a-zA-Z_][a-zA-Z0-9_]*)/m;
 const lpar = /^(\()/m;
 const rpar = /^(\))/m;
+
+export function tokenize(code: string): Token[] {
+  const pCode = preprocess(code);
+  const result = makeTokenList(pCode);
+  return filterSemicolon(result);
+}
+
+function preprocess(code: string): string {
+  return code.replace(/(\r\n|\r|\n|;)+/g, ';');
+}
+
+function makeTokenList(code: string, result: Token[] = []): Token[] {
+  if (code.length > 0) {
+    const [token, restCode] = getToken(code);
+    if (token) {
+      result.push(token);
+    }
+    return makeTokenList(restCode, result);
+  } else {
+    return filterSemicolon(result);
+  }
+}
 
 function getToken(code: string): [Token | false, string] {
   //console.log(`getToken(${code})`)
@@ -50,7 +72,7 @@ function getToken(code: string): [Token | false, string] {
   } else {
     throw `ERROR getToken(${code})`;
   }
-  let usedLen = 1;
+  let usedLen;
   if (token) {
     usedLen =
       token.type === 'str' ? token.value.length + 2 : token.value.length;
@@ -61,34 +83,12 @@ function getToken(code: string): [Token | false, string] {
   return [token, rest];
 }
 
-export function tokenize(code: string): Token[] {
-  const pCode = preprocess(code);
-  const result = makeTokenList(pCode);
-  return filterSemicolon(result);
-}
-
-function preprocess(code: string): string {
-  return code.replace(/(\r\n|\r|\n|;)+/g, ';');
-}
-
-function makeTokenList(code: string, result: Token[] = []): Token[] {
-  if (code === '') {
-    return filterSemicolon(result);
-  } else {
-    const [token, restCode] = getToken(code);
-    if (token) {
-      result.push(token);
-    }
-    return makeTokenList(restCode, result);
-  }
-}
-
 function filterSemicolon(tokens: Token[]): Token[] {
-  // "; ; abc.xyz()" => "abc.xyz();123.print()"
+  // "; ; abc.xyz()" => "abc.xyz();123.print();"
   while (tokens.length > 1 && isTerminator(tokens[0])) {
     tokens.shift();
   }
-  // "abc.xyz();;" => "abc.xyz();123.print()"
+  // "abc.xyz();123.print();;;" => "abc.xyz();123.print()"
   while (tokens.length > 1 && isTerminator(tokens[tokens.length - 1])) {
     tokens.pop();
   }

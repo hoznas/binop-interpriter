@@ -45,7 +45,7 @@ function binOpRate(op: string): number {
   if (op === '=' || op === ':=') return 6;
   if (op === ';') return 7;
   if (op === ',') return 8;
-  throw 'unknown BinOp(' + op + ')';
+  throw `ERROR binOpRate() =>unknown BinOp(${op})`;
 }
 
 export function parse(tokens: Token[]): IoObject {
@@ -58,7 +58,7 @@ function parseBinOp(reader: TokenReader, depth: number): IoObject {
   if (depth === -1) {
     return parseFactor(reader);
   } else if (reader.endOfToken()) {
-    throw 'parseBinOp()';
+    throw 'ERROR parseBinOp(end of code) ';
   } else {
     const result = parseBinOp(reader, depth - 1);
     if (reader.endOfToken()) {
@@ -103,13 +103,13 @@ function parseFactor(reader: TokenReader): IoObject {
   } else if (token.type === '(') {
     return parseParents(reader);
   } else if (token.type === ')') {
-    throw "parseFactor() syntax error => ')' unmatch";
+    throw "ERROR parseFactor() syntax error => ')' unmatch";
   } else if (token.type === 'sym') {
     const s = token.value;
     return parseMessage(s, reader);
   } else {
     //token.type === 'binop'
-    throw 'parseFactor()';
+    throw 'ERROR parseFactor() => unknown operator';
   }
 }
 
