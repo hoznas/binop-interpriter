@@ -1,5 +1,5 @@
 import { IoObject, Message, Num, Str } from './object';
-import { isBinOp, isLPar, isRPar, Token } from './tokenizer';
+import { isBinOp, isLPar, isRPar, isSym, Token } from './tokenizer';
 
 class TokenReader {
   tokens: Token[];
@@ -42,15 +42,16 @@ function binOpRate(op: string): number {
   if (op === '<' || op === '>' || op === '<=' || op === '>=') return 3;
   if (op === '==' || op === '!=') return 4;
   if (op === '&&' || op === '||') return 5;
-  if (op === '=' || op === ':=') return 6;
-  if (op === ';') return 7;
-  if (op === ',') return 8;
+  if (op === '=' || op === ':=') return 7;
+  if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(op)) return 8;
+  if (op === ';') return 9;
+  if (op === ',') return 10;
   throw `ERROR binOpRate() =>unknown BinOp(${op})`;
 }
 
 export function parse(tokens: Token[]): IoObject {
   const reader = new TokenReader(tokens);
-  const result = parseBinOp(reader, 7);
+  const result = parseBinOp(reader, 9);
   return result;
 }
 
@@ -69,6 +70,8 @@ function parseBinOp(reader: TokenReader, depth: number): IoObject {
         return result;
       } else {
         if (isBinOp(next) && binOpRate(next.value) === depth) {
+          return parseBinOp2(reader, result, depth);
+        } else if (isSym(next) && binOpRate(next.value) === depth) {
           return parseBinOp2(reader, result, depth);
         }
       }
@@ -126,7 +129,7 @@ function parseMessage(mName: string, reader: TokenReader): Message {
     } else {
       // some argument(s)
       reader.next(); // drop "("
-      const args = parseBinOp(reader, 8);
+      const args = parseBinOp(reader, 10);
       const m = new Message(undefined, mName, toArray(args));
       reader.drop(')');
       return m;
@@ -137,7 +140,7 @@ function parseMessage(mName: string, reader: TokenReader): Message {
 }
 
 function parseParents(reader: TokenReader): IoObject {
-  const result = parseBinOp(reader, 7);
+  const result = parseBinOp(reader, 9);
   reader.drop(')');
   return result;
 }
