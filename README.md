@@ -1,5 +1,5 @@
 # binop-interpriter
-##　特徴
+## 特徴
 サンプルコードsample.boに書いてあります。
 
 ## 実行
