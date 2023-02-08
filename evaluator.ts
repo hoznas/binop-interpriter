@@ -148,15 +148,26 @@ function evalArithmeticOp(
 ): IoObject {
   //console.log(`evalArithmeticOp(${elhs.str()} ${op} ${erhs.str()})`);
   const [elhs, erhs] = [evalNode(lhs, env), evalNode(rhs, env)];
-  if (op === '+' && elhs instanceof Str) return elhs.concat(erhs);
-  if (elhs instanceof Num && (erhs instanceof Num || erhs instanceof Str)) {
-    const n = erhs instanceof Num ? erhs.value : Number(erhs.value);
+  if (elhs instanceof Num) {
+    const n =
+      erhs instanceof Num
+        ? erhs.value
+        : erhs instanceof Str
+        ? Number(erhs.value)
+        : undefined;
+    if (n === undefined) throw 'ERROR evalArithmeticOp';
     if (op === '+') return new Num(elhs.value + n);
     if (op === '-') return new Num(elhs.value - n);
     if (op === '*') return new Num(elhs.value * n);
     if (op === '/') return new Num(elhs.value / n);
-    //op === '%'
-    return new Num(elhs.value % n);
+    if (op === '%') return new Num(elhs.value % n);
+  } else if (elhs instanceof Str) {
+    if (op === '+' && (erhs instanceof Str || erhs instanceof Num)) {
+      return new Str(elhs.value.concat(erhs.value.toString()));
+    } else if (erhs instanceof Num) {
+      if (op === '/') return new Str(elhs.value.substring(0, erhs.value));
+      if (op === '%') return new Str(elhs.value.substring(erhs.value));
+    }
   }
   throw `ERROR evalArithmeticOp(${lhs.str()} ${op} ${rhs.str()})`;
 }
@@ -198,7 +209,7 @@ function evalAssign(
       throw 'ERROR evalAssign() assign error';
     }
   }
-  throw 'ERROR evalAssign() ';
+  throw 'ERROR evalAssign()';
 }
 function assignObjectSlot(
   targetObj: UserObject,
