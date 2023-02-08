@@ -144,7 +144,7 @@ function parseParents(reader: TokenReader): IoObject {
   reader.drop(')');
   return result;
 }
-//
+
 function toArray(obj: IoObject): IoObject[] {
   if (obj instanceof Message && isBinOpMessage(obj, ',')) {
     return toArray(obj.target!).concat(obj.args![0]);
