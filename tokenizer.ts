@@ -16,6 +16,9 @@ export const isRPar = (t: Token) => {
 export const isBinOp = (t: Token) => {
   return t.type === 'binop';
 };
+export const isSym = (t: Token) => {
+  return t.type === 'sym';
+};
 
 const binop = /^(<=|>=|==|!=|:=|&&|\|\||[.*%+\-\/<>=,])/m; // Binary Operator
 const terminator = /^(\n|;)/m;

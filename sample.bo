@@ -90,6 +90,12 @@ dog1.greet().print(); "I'm Fooと表示"
 dog2.greet().print(); "I'm Barと表示"
 dog3.greet().print(); "I'm Bazと表示"
 
+"ユーザ定義演算子"
+o := Object.clone()
+o.setValue = fun(x,o.value = x)
+o setValue 123
+o.value.print(); "123と表示"
+
 "データ構造の例"
 "組み込みのデータ構造はObjectしか無い"
 Cell := fun(a,b,

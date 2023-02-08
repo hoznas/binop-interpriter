@@ -55,6 +55,7 @@ function parserTest() {
     ['1+2*3', '1.+(2.*(3))'],
     ['(1+2)*3', '1.+(2).*(3)'],
     ['1.print', '1.print'],
+    ['1 op 2', '1.op(2)'],
     ['1.print;2.print();', '1.print.;(2.print())'],
     ['print;print()\nprint(1+2)', 'print.;(print()).;(print(1.+(2)))'],
     [
@@ -66,6 +67,7 @@ function parserTest() {
     ['print(1)', 'print(1)'],
     ['print(1,2)', 'print(1, 2)'],
     ['Object.clone().clone()', 'Object.clone().clone()'],
+    ['obj func arg', 'obj.func(arg)'],
   ];
   for (const test of tests) {
     const [code, mustbe] = test;
@@ -152,6 +154,10 @@ function evaluatorTest() {
     [
       'obj:=Object.clone();obj.v:=12;obj.f:=fun(a,b,this.v+a+b);obj.f(3,2)',
       '17',
+    ],
+    [
+      'obj2:=Object.clone();obj2.setA=fun(arg,this.a=arg);obj2 setA 123;obj2.a',
+      '123',
     ],
   ];
 
