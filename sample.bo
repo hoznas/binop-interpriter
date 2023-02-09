@@ -92,7 +92,7 @@ dog3.greet().print(); "I'm Bazと表示"
 
 "ユーザ定義演算子"
 o := Object.clone()
-o.setValue = fun(x,o.value = x)
+o.setValue = fun(x,this.value = x)
 o setValue 123
 o.value.print(); "123と表示"
 
