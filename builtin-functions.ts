@@ -29,8 +29,6 @@ export const MESSAGE = function (args: IoObject[], env: Memory): IoObject {
       return new Message(args[1], args[2].value, args.slice(3, args.length));
     }
   }
-  console.log(args);
-  console.log(args.length);
   throw `ERROR MESSAGE(${args
     .map((e) => {
       e.str();
