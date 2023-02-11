@@ -8,7 +8,7 @@
 
 
 ### テストの実行
-tsc && node tests
+```tsc && node tests```
 
 ## ファイル構成
 |ファイル名|概要|
