@@ -154,5 +154,7 @@ function toArray(obj: IoObject): IoObject[] {
 }
 
 export function isBinOpMessage(obj: Message, op?: string): boolean {
-  return obj.target !== undefined && obj.name === op && obj.args?.length === 1;
+  return (
+    obj.target !== undefined && obj.slotName === op && obj.args?.length === 1
+  );
 }

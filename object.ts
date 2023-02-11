@@ -73,17 +73,21 @@ export const NIL = Nil.getInstance();
 
 export class Message extends IoObject {
   target: IoObject | undefined;
-  name: string;
+  slotName: string;
   args?: IoObject[];
-  constructor(target: IoObject | undefined, name: string, args?: IoObject[]) {
+  constructor(
+    target: IoObject | undefined,
+    slotName: string,
+    args?: IoObject[]
+  ) {
     super();
-    if (name !== '.') {
+    if (slotName !== '.') {
       this.target = target;
-      this.name = name;
+      this.slotName = slotName;
       this.args = args;
     } else if (args?.length === 1 && args[0] instanceof Message) {
       this.target = target;
-      this.name = args[0].name;
+      this.slotName = args[0].slotName;
       this.args = args[0].args;
     } else {
       throw `ERROR new Message(${target?.str()},${name},${args
@@ -99,10 +103,10 @@ export class Message extends IoObject {
     } else {
       argsStr = '';
     }
-    if (this.name === '.' && this.args?.length === 1)
+    if (this.slotName === '.' && this.args?.length === 1)
       return targetStr + '.' + this.args![0].str();
-    else if (this.target === undefined) return this.name + argsStr;
-    else return targetStr + '.' + this.name + argsStr;
+    else if (this.target === undefined) return this.slotName + argsStr;
+    else return targetStr + '.' + this.slotName + argsStr;
   }
 }
 
@@ -113,11 +117,11 @@ export class Fun extends IoObject {
   constructor(args: IoObject[], env: Memory) {
     super();
     if (args.length === 0) {
-      throw 'ERROR new Method(no-argument)';
+      throw 'ERROR new Fun(no-argument)';
     }
     this.body = args[args.length - 1];
     this.argList = args.slice(0, args.length - 1).map((e) => {
-      if (e instanceof Message && !e.target && !e.args) return e.name;
+      if (e instanceof Message && !e.target && !e.args) return e.slotName;
       else throw `ERROR new Fun() => argument must be Str. value=${e.str()}`;
     });
     this.createdEnv = env;
@@ -126,6 +130,26 @@ export class Fun extends IoObject {
     const argStr =
       this.argList.length === 0 ? '' : this.argList.join(',') + ',';
     return `fun(${argStr}${this.body.str()})`;
+  }
+}
+export class Macro extends IoObject {
+  argList: string[];
+  body: IoObject;
+  constructor(args: IoObject[]) {
+    super();
+    if (args.length === 0) {
+      throw 'ERROR new Macro(no-argument)';
+    }
+    this.body = args[args.length - 1];
+    this.argList = args.slice(0, args.length - 1).map((e) => {
+      if (e instanceof Message && !e.target && !e.args) return e.slotName;
+      else throw `ERROR new Macro() => argument must be Str. value=${e.str()}`;
+    });
+  }
+  str(): string {
+    const argStr =
+      this.argList.length === 0 ? '' : this.argList.join(',') + ',';
+    return `macro(${argStr}${this.body.str()})`;
   }
 }
 

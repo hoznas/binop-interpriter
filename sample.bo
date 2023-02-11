@@ -2,8 +2,11 @@
 
 "特徴"
 "プロトタイプベースのオブジェクト指向言語"
+"文法はioというプログラミング言語に影響を受けている"
 "この言語は数値、文字列、関数以外のだいたいを2項演算子で表現している"
-"BINary OPerator(2項演算子)。略してBinOp言語"
+
+"名前の由来"
+"2項演算子は英語でBINary OPerator(2項演算子)。略してBinOp言語"
 
 "コメント"
 "BinOp言語にはコメントがないので、プログラムに影響の無い位置に文字列を置く"
@@ -30,7 +33,7 @@
 "abcd" % 2; "cd"
 
 "真偽値"
-nil; "偽を表す"
+nil; "nilは偽を表す唯一の値"
 0; ""; "数値、文字列は全て真"
 1 > 0; "比較演算子は、偽の場合nilを返し、正の場合非nilを返す"
 
@@ -81,7 +84,7 @@ Dog := fun(name,age,
   dogClass)
 
 dog1 := Dog("Foo", 10)
-dog2 := dog1.clone()
+dog2 := dog1.clone(); "直接オブジェクトをクローンしてもいい。"
 dog2.name = "Bar";  "objectのslotへの代入はクローン元に影響しない"
 dog2.age = 6
 dog3 := Dog("Baz", 1)
@@ -90,10 +93,17 @@ dog1.greet().print(); "I'm Fooと表示"
 dog2.greet().print(); "I'm Barと表示"
 dog3.greet().print(); "I'm Bazと表示"
 
+"継承"
+BaseClass := Object.clone()
+BaseClass.func := fun(1+2)
+SubClass := BaseClass.clone()
+instance := SubClass.clone()
+instance.func().print(); "3と表示"
+
 "ユーザ定義演算子"
 o := Object.clone()
 o.setValue = fun(x,this.value = x)
-o setValue 123
+o setValue 123; "o.setValue(123)と解釈される"
 o.value.print(); "123と表示"
 
 "データ構造の例"
@@ -118,7 +128,31 @@ numbers := list(0,5)
 numbers.print(); "0,1,2,3,4を表すリストを表示"
 sum(numbers).print(); "10を表示"
 
+
+"messageの生成"
+"第1引数はオプション。以下の4種類"
+"__"; "targetなし、呼び出しなし"
+"_@"; "targetなし、呼び出しあり"
+"@_"; "targetあり、呼び出しなし"
+"@@"; "targetあり、呼び出しあり"
+message("__", "method"); "=> method"
+message("_@", "method"); "=> method()"
+message("_@", "method", 1, 2, 3); "=> method(1,2,3)"
+message("@_", target, "method"); "=> target.method"
+message("@@", target, "method"); "=> target.method()"
+message("@@", target, "method", 1, 2, 3); "=> target.method(1,2,3)"
+
+"eval"
+evalNode(message("@@",5,"+",7)); "12"
+evalStr("5+7"); "12"
+
+"マクロ"
+myIf := macro(condition,trueCase,falseCase,
+   if(evalNode(condition), evalNode(trueCase), evalNode(falseCase)))
+numA := 111
+numB := 222
+myIf(numA<=numB, numA.print(), numB.print()); "111と表示"
+
 "Todo"
 "末尾再起の最適化"
-"マクロの実装"
 "もっとプロトタイプベースのオブジェクト指向言語にする"

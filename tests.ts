@@ -125,9 +125,9 @@ function evaluatorTest() {
     ['1 + 1;2*4', '8'],
     ['a := 5; a*4', '20'],
     ['b := 5; b=b+1; b', '6'],
-    ['(1+2).print()', 'nil'], // print "3"
+    ['(1+2).print()', '3'], // print "3"
     ['fun((1+2).print())', 'fun(1.+(2).print())'],
-    ['f:=fun((1+2).print());f()', 'nil'], // print "3"
+    ['f:=fun((1+2).print());f()', '3'], // print "3"
     ['fun(a,b,(a+b).print())', 'fun(a,b,a.+(b).print())'],
     ['add:=fun(a,b,a+b);add(6/3,2)', '4'],
     ['2>1', '1'],
@@ -137,7 +137,6 @@ function evaluatorTest() {
     ['create:=fun(c:=0;fun(c=c+1));counter:=create();counter();counter()', '2'],
     ['Object', '{}'],
     ['Object.clone()', '{}'],
-    ['123.print()', 'nil'], // print 123
     ['123.clone()', '123'],
     ['o:=Object.clone();o.x:=1', '1'],
     ['o', '{x:1}'],
@@ -159,6 +158,22 @@ function evaluatorTest() {
       'obj2:=Object.clone();obj2.setA=fun(arg,this.a=arg);obj2 setA 123;obj2.a',
       '123',
     ],
+    ['message("__","method")', 'method'],
+    ['message("_@","method")', 'method()'],
+    ['message("_@","method", 1,2,3)', 'method(1, 2, 3)'],
+    ['message("@_",target,"method")', 'target.method'],
+    ['message("@@", target,"method")', 'target.method()'],
+    ['message("@@", target,"method", 1,2,3)', 'target.method(1, 2, 3)'],
+    ['evalNode(message("@@",5,"+",7))', '12'],
+    ['evalStr("5+7")', '12'],
+    [
+      'myIf := macro(condition,trueCase,falseCase,if(evalNode(condition), evalNode(trueCase), evalNode(falseCase)));nil',
+      'nil',
+    ],
+    [
+      'numA := 111;numB := 222;myIf(numA<=numB, numA.print(), numB.print())',
+      '111',
+    ], // 111.print
   ];
 
   const e = new Evaluator();
