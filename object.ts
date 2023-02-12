@@ -1,24 +1,24 @@
 import { Memory } from './memory';
 
-export abstract class IoObject {
+export abstract class BoObject {
   abstract str(): string;
-  compare(other: IoObject): number {
+  compare(other: BoObject): number {
     if (this === other) return 0;
     else return -1;
   }
-  clone(): IoObject {
+  clone(): BoObject {
     return this;
   }
 }
 
-export class Num extends IoObject {
+export class Num extends BoObject {
   constructor(public value: number) {
     super();
   }
   str(): string {
     return this.value.toString();
   }
-  compare(other: IoObject): number {
+  compare(other: BoObject): number {
     if (other instanceof Num) {
       const result = this.value - other.value;
       if (result === 0) return 0;
@@ -29,14 +29,14 @@ export class Num extends IoObject {
   }
 }
 
-export class Str extends IoObject {
+export class Str extends BoObject {
   constructor(public value: string) {
     super();
   }
   str(): string {
     return `"${this.value}"`;
   }
-  compare(other: IoObject): number {
+  compare(other: BoObject): number {
     if (other instanceof Str) {
       if (this.value === other.value) return 0;
       else if (this.value < other.value) return -1;
@@ -44,13 +44,13 @@ export class Str extends IoObject {
     }
     return -1;
   }
-  concat(other: IoObject): IoObject {
+  concat(other: BoObject): BoObject {
     if (other instanceof Str) return new Str(this.value + other.value);
     else return new Str(this.value + other.str());
   }
 }
 
-export class Nil extends IoObject {
+export class Nil extends BoObject {
   private static instance = new Nil();
   private constructor() {
     super();
@@ -58,7 +58,7 @@ export class Nil extends IoObject {
   str(): string {
     return 'nil';
   }
-  compare(other: IoObject): number {
+  compare(other: BoObject): number {
     if (other instanceof Nil) return 0;
     else return -1;
   }
@@ -68,32 +68,31 @@ export class Nil extends IoObject {
 }
 export const NIL = Nil.getInstance();
 
-export class Message extends IoObject {
-  target: IoObject | undefined;
+export class Message extends BoObject {
+  receiver: BoObject | undefined;
   slotName: string;
-  args?: IoObject[];
+  args?: BoObject[];
   constructor(
-    target: IoObject | undefined,
+    receiver: BoObject | undefined,
     slotName: string,
-    args?: IoObject[]
+    args?: BoObject[]
   ) {
     super();
+    this.receiver = receiver;
     if (slotName !== '.') {
-      this.target = target;
       this.slotName = slotName;
       this.args = args;
     } else if (args?.length === 1 && args[0] instanceof Message) {
-      this.target = target;
       this.slotName = args[0].slotName;
       this.args = args[0].args;
     } else {
-      throw `ERROR new Message(${target?.str()},${name},${args
+      throw `ERROR new Message(${receiver?.str()},${slotName},${args
         ?.map((e) => e.str())
         .join()})`;
     }
   }
   str(): string {
-    const targetStr = this.target ? this.target.str() : '';
+    const receiverStr = this.receiver ? this.receiver.str() : '';
     let argsStr: string;
     if (this.args) {
       argsStr = '(' + this.args.map((e) => e.str()).join(', ') + ')';
@@ -101,24 +100,24 @@ export class Message extends IoObject {
       argsStr = '';
     }
     if (this.slotName === '.' && this.args?.length === 1)
-      return targetStr + '.' + this.args![0].str();
-    else if (this.target === undefined) return this.slotName + argsStr;
-    else return targetStr + '.' + this.slotName + argsStr;
+      return receiverStr + '.' + this.args![0].str();
+    else if (this.receiver === undefined) return this.slotName + argsStr;
+    else return receiverStr + '.' + this.slotName + argsStr;
   }
 }
 
-export class Fun extends IoObject {
+export class Fun extends BoObject {
   argList: string[];
-  body: IoObject;
+  body: BoObject;
   createdEnv: Memory;
-  constructor(args: IoObject[], env: Memory) {
+  constructor(args: BoObject[], env: Memory) {
     super();
     if (args.length === 0) {
       throw 'ERROR new Fun(no-argument)';
     }
     this.body = args[args.length - 1];
     this.argList = args.slice(0, args.length - 1).map((e) => {
-      if (e instanceof Message && !e.target && !e.args) return e.slotName;
+      if (e instanceof Message && !e.receiver && !e.args) return e.slotName;
       else throw `ERROR new Fun() => argument must be Str. value=${e.str()}`;
     });
     this.createdEnv = env;
@@ -129,17 +128,17 @@ export class Fun extends IoObject {
     return `fun(${argStr}${this.body.str()})`;
   }
 }
-export class Macro extends IoObject {
+export class Macro extends BoObject {
   argList: string[];
-  body: IoObject;
-  constructor(args: IoObject[]) {
+  body: BoObject;
+  constructor(args: BoObject[]) {
     super();
     if (args.length === 0) {
       throw 'ERROR new Macro(no-argument)';
     }
     this.body = args[args.length - 1];
     this.argList = args.slice(0, args.length - 1).map((e) => {
-      if (e instanceof Message && !e.target && !e.args) return e.slotName;
+      if (e instanceof Message && !e.receiver && !e.args) return e.slotName;
       else throw `ERROR new Macro() => argument must be Str. value=${e.str()}`;
     });
   }
@@ -150,7 +149,7 @@ export class Macro extends IoObject {
   }
 }
 
-export class UserObject extends IoObject {
+export class UserObject extends BoObject {
   memory: Memory;
   proto?: UserObject;
   constructor(slot: Memory, proto?: UserObject) {
@@ -158,7 +157,7 @@ export class UserObject extends IoObject {
     this.memory = slot;
     this.proto = proto;
   }
-  compare(other: IoObject): number {
+  compare(other: BoObject): number {
     if (this === other) return 0;
     else return -1;
   }
@@ -173,16 +172,16 @@ export class UserObject extends IoObject {
   clone(): UserObject {
     return new UserObject(this.memory.subMemory(), this);
   }
-  define(name: string, value: IoObject): IoObject | null {
+  define(name: string, value: BoObject): BoObject | null {
     return this.memory.define(name, value);
   }
-  update(name: string, value: IoObject): IoObject | null {
+  update(name: string, value: BoObject): BoObject | null {
     return this.memory.update(name, value);
   }
-  assignToObject(name: string, value: IoObject): IoObject {
+  assignToObject(name: string, value: BoObject): BoObject {
     return this.memory.defineForce(name, value);
   }
-  get(name: string): IoObject | undefined {
+  get(name: string): BoObject | undefined {
     return this.memory.get(name);
   }
 }

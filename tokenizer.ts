@@ -30,8 +30,8 @@ const lpar = /^(\()/m;
 const rpar = /^(\))/m;
 
 export function tokenize(code: string): Token[] {
-  const pCode = preprocess(code);
-  const result = makeTokenList(pCode);
+  const processedCode = preprocess(code);
+  const result = makeTokenList(processedCode);
   return filterSemicolon(result);
 }
 
@@ -87,11 +87,11 @@ function getToken(code: string): [Token | false, string] {
 }
 
 function filterSemicolon(tokens: Token[]): Token[] {
-  // "; ; abc.xyz()" => "abc.xyz();123.print();"
+  // "; ; abc.xyz();;123.print();;" => "abc.xyz();123.print();;"
   while (tokens.length > 1 && isTerminator(tokens[0])) {
     tokens.shift();
   }
-  // "abc.xyz();123.print();;;" => "abc.xyz();123.print()"
+  // "abc.xyz();123.print();;" => "abc.xyz();123.print()"
   while (tokens.length > 1 && isTerminator(tokens[tokens.length - 1])) {
     tokens.pop();
   }
@@ -102,11 +102,14 @@ function filter1(tokens: Token[]): Token[] {
   const result: Token[] = [];
   for (let i = 0; i < tokens.length - 1; i++) {
     if (isTerminator(tokens[i]) && isTerminator(tokens[i + 1])) {
-      //do nothing
+      // do nothing
+      // ;; => ;
     } else if (isTerminator(tokens[i]) && isRPar(tokens[i + 1])) {
-      //do nothing
+      // do nothing
+      // ;) => )
     } else if (isTerminator(tokens[i]) && isBinOp(tokens[i + 1])) {
-      //do nothing
+      // do nothing
+      // ;+ => +
     } else {
       result.push(tokens[i]);
     }
@@ -120,12 +123,14 @@ function filter2(tokens: Token[]): Token[] {
   for (let i = 1; i < tokens.length; i++) {
     if (isLPar(tokens[i - 1]) && isTerminator(tokens[i])) {
       // do nothing
+      // (; => (
     } else if (isBinOp(tokens[i - 1]) && isTerminator(tokens[i])) {
       // do nothing
+      // +; => +
     } else {
       result.push(tokens[i]);
     }
   }
-  result.unshift(tokens[0]);
+  result.unshift(tokens[0]); // first one
   return result;
 }
