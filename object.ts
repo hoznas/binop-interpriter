@@ -4,11 +4,7 @@ export abstract class IoObject {
   abstract str(): string;
   compare(other: IoObject): number {
     if (this === other) return 0;
-    const s1 = this.str();
-    const s2 = other.str();
-    if (s1 < s2) return -1;
-    if (s1 > s2) return 1;
-    else return 0;
+    else return -1;
   }
   clone(): IoObject {
     return this;
@@ -28,7 +24,8 @@ export class Num extends IoObject {
       if (result === 0) return 0;
       else if (result < 0) return -1;
       else return 1;
-    } else return super.compare(other);
+    }
+    return -1;
   }
 }
 
@@ -45,7 +42,7 @@ export class Str extends IoObject {
       else if (this.value < other.value) return -1;
       else return 1; //this.value > other.value
     }
-    return super.compare(other);
+    return -1;
   }
   concat(other: IoObject): IoObject {
     if (other instanceof Str) return new Str(this.value + other.value);
@@ -63,7 +60,7 @@ export class Nil extends IoObject {
   }
   compare(other: IoObject): number {
     if (other instanceof Nil) return 0;
-    return super.compare(other);
+    else return -1;
   }
   static getInstance(): Nil {
     return Nil.instance;

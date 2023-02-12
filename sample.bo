@@ -37,14 +37,27 @@ v := 1; "変数の宣言"
 v = v + 5; "再代入"
 v.print(); "=> 6と表示"
 
-"== 数式処理 =="
-n := 1 + (2 - 3) * 4
+"== 2項演算子 =="
+"定義されている2項演算子は以下の通り"
+"すべて左結合で、上の方が結合が強い"
+"."
+"* / %"
+"+ -"
+"< > <= >="
+"== !="
+"&& ||"
+":= ="
+"ユーザ定義2項演算子(後述)"
+";"
+","
+
+n := 1 + (2 - 3) * 4; "n.:=(1.+((2.-(3)).*(4)))と解釈される"
 n.print(); "=> -3と表示"
 
 "== セミコロンと改行 =="
 "どちらも順次処理を行う2項演算子"
 "a;b は、a.;(b)と解釈され、a、bの順番に評価が行われる"
-"first".print();"second.print()"; "=> first,secondの順に表示"
+"first".print();"second".print(); "=> first,secondの順に表示"
 
 "== 条件分岐 =="
 if(n==7,
@@ -66,7 +79,7 @@ factorial := fun(n,
   if(n>1,
     n * factorial(n-1),
     1))
-factorial(4).print(); "=> 24と表示(4!=24)"
+factorial(4).print(); "=> 24と表示(4! = 24)"
 
 "== クロージャ =="
 makeCounter := fun(n:=0;fun(n=n+1))
@@ -127,7 +140,7 @@ numbers.print(); "=> 0,1,2,3,4を表すリストを表示"
 sum(numbers).print(); "=> 10を表示"
 
 "== messageの生成 =="
-"第1引数はオプション。以下の4種類"
+"第1引数はオプション。以下の4種類。ちょっと複雑"
 "__"; "targetなし、呼び出しなし"
 "_@"; "targetなし、呼び出しあり"
 "@_"; "targetあり、呼び出しなし"
@@ -145,11 +158,12 @@ evalStr("5+7"); "=> 12"
 
 "== マクロ =="
 myIf := macro(condition,trueCase,falseCase,
-   if(evalNode(condition),CCC:=0; evalNode(trueCase), evalNode(falseCase)))
+   if(evalNode(condition), evalNode(trueCase), evalNode(falseCase)))
 numA := 111
 numB := 222
 myIf(numA<=numB, numA.print(), numB.print()); "=> 111と表示"
 
 "==== Todo ===="
 "末尾再起の最適化"
+"VMでの実行"
 "もっとプロトタイプベースのオブジェクト指向言語にする"
