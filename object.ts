@@ -86,9 +86,11 @@ export class Message extends BoObject {
       this.slotName = args[0].slotName;
       this.args = args[0].args;
     } else {
-      throw `ERROR new Message(${receiver?.str()},${slotName},${args
-        ?.map((e) => e.str())
-        .join()})`;
+      throw new Error(
+        `ERROR new Message(${receiver?.str()},${slotName},${args
+          ?.map((e) => e.str())
+          .join()})`
+      );
     }
   }
   str(): string {
@@ -113,12 +115,12 @@ export class Fun extends BoObject {
   constructor(args: BoObject[], env: Memory) {
     super();
     if (args.length === 0) {
-      throw 'ERROR new Fun(no-argument)';
+      throw new Error('ERROR new Fun(no-argument)');
     }
     this.body = args[args.length - 1];
     this.argList = args.slice(0, args.length - 1).map((e) => {
       if (e instanceof Message && !e.receiver && !e.args) return e.slotName;
-      else throw `ERROR new Fun() => argument must be Str. value=${e.str()}`;
+      else throw new Error(`ERROR new Fun() => type error. value=${e.str()}`);
     });
     this.createdEnv = env;
   }
@@ -134,12 +136,12 @@ export class Macro extends BoObject {
   constructor(args: BoObject[]) {
     super();
     if (args.length === 0) {
-      throw 'ERROR new Macro(no-argument)';
+      throw new Error('ERROR new Macro(no-argument)');
     }
     this.body = args[args.length - 1];
     this.argList = args.slice(0, args.length - 1).map((e) => {
       if (e instanceof Message && !e.receiver && !e.args) return e.slotName;
-      else throw `ERROR new Macro() => argument must be Str. value=${e.str()}`;
+      else throw new Error(`ERROR new Macro()  value=${e.str()}`);
     });
   }
   str(): string {

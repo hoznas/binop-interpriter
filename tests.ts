@@ -4,28 +4,17 @@ import { Num } from './object';
 import { parse } from './parser';
 import { tokenize } from './tokenizer';
 
-function main() {
-  tokenizerTest();
-  parserTest();
-  slotTest();
-  evaluatorTest();
-}
-
-main();
-
-function tokenizerTest() {
+const tokenizerTest = () => {
   const tests: [string, string][] = [
     ['123', '123'],
     ['abc', 'abc'],
     ['"abc def"', 'abc def'],
     [`"abc "${'\n'}"def"`, 'abc |;|def'],
-    ['abc;def;;zzz', 'abc|;|def|;|zzz'],
+    [';;abc;def;;zzz;;', 'abc|;|def|;|zzz'],
     [
-      ';;;abc.f(;c;,;;a;;b;;)  ;;;;;  def("a b c") ; ; xxx; zzz ;;  ;',
+      ';;;abc.f(;c;,;;a;;b;;)  ;;;;;  def(;;"a b c";;) ; ; xxx; zzz ;;  ;',
       'abc|.|f|(|c|,|a|;|b|)|;|def|(|a b c|)|;|xxx|;|zzz',
     ],
-    //['obj.func((123*456)-789, "abc");123.print', '******'],
-    //["123;;;;;456\n\n789;(abc.def;fff(););;", '******'],
   ];
   for (const test of tests) {
     const [code, mustbe] = test;
@@ -44,9 +33,9 @@ function tokenizerTest() {
   }
 
   console.log('[TOKENIZER] All tests are OK.');
-}
+};
 
-function parserTest() {
+const parserTest = () => {
   const tests: [string, string][] = [
     ['123', '123'],
     ['"abc def"', '"abc def"'],
@@ -84,9 +73,9 @@ function parserTest() {
     }
   }
   console.log('[PARSER] All tests are OK.');
-}
+};
 
-function slotTest() {
+const slotTest = () => {
   const env = new Memory();
   const sub = env.subMemory();
   env.define('one', new Num(1));
@@ -106,10 +95,10 @@ function slotTest() {
   if (sub.update('one', new Num(1)) && env.get('one')!.str() !== '1') {
     throw 'D';
   }
-  console.log('[MEMORY] all tests are ok.');
-}
+  console.log('[MEMORY] All tests are ok.');
+};
 
-function evaluatorTest() {
+const evaluatorTest = () => {
   const tests = [
     ['123', '123'],
     ['"abc def"', '"abc def"'],
@@ -189,4 +178,13 @@ function evaluatorTest() {
     }
   }
   console.log('[EVALUATOR] all tests are ok.');
-}
+};
+
+const main = () => {
+  tokenizerTest();
+  parserTest();
+  slotTest();
+  evaluatorTest();
+};
+
+main();

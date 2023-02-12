@@ -4,22 +4,6 @@ export type Token = {
 };
 export type TokenType = '(' | ')' | 'sym' | 'num' | 'str' | 'binop';
 
-export const isTerminator = (t: Token) => {
-  return t.type === 'binop' && (t.value === ';' || t.value === '\n');
-};
-export const isLPar = (t: Token) => {
-  return t.type === '(';
-};
-export const isRPar = (t: Token) => {
-  return t.type === ')';
-};
-export const isBinOp = (t: Token) => {
-  return t.type === 'binop';
-};
-export const isSym = (t: Token) => {
-  return t.type === 'sym';
-};
-
 const binop = /^(<=|>=|==|!=|:=|&&|\|\||[.*%+\-\/<>=,])/m; // Binary Operator
 const terminator = /^(\n|;)/m;
 const whiteSpace = /^([ \t])/m;
@@ -29,17 +13,17 @@ const sym = /^([a-zA-Z_][a-zA-Z0-9_]*)/m;
 const lpar = /^(\()/m;
 const rpar = /^(\))/m;
 
-export function tokenize(code: string): Token[] {
+export const tokenize = (code: string): Token[] => {
   const processedCode = preprocess(code);
   const result = makeTokenList(processedCode);
   return filterSemicolon(result);
-}
+};
 
-function preprocess(code: string): string {
+const preprocess = (code: string): string => {
   return code.replace(/(\r\n|\r|\n|;)+/g, ';');
-}
+};
 
-function makeTokenList(code: string, result: Token[] = []): Token[] {
+const makeTokenList = (code: string, result: Token[] = []): Token[] => {
   if (code.length > 0) {
     const [token, restCode] = getToken(code);
     if (token) {
@@ -49,9 +33,9 @@ function makeTokenList(code: string, result: Token[] = []): Token[] {
   } else {
     return filterSemicolon(result);
   }
-}
+};
 
-function getToken(code: string): [Token | false, string] {
+const getToken = (code: string): [Token | false, string] => {
   //console.log(`getToken(${code})`)
   let match: RegExpMatchArray | null;
   let token: Token | false;
@@ -73,7 +57,7 @@ function getToken(code: string): [Token | false, string] {
   } else if ((match = code.match(sym))) {
     token = { type: 'sym', value: match![1] };
   } else {
-    throw `ERROR getToken(${code})`;
+    throw new Error(`ERROR getToken(${code})`);
   }
   let usedLen;
   if (token) {
@@ -84,9 +68,9 @@ function getToken(code: string): [Token | false, string] {
   }
   const rest = code.substring(usedLen, code.length);
   return [token, rest];
-}
+};
 
-function filterSemicolon(tokens: Token[]): Token[] {
+const filterSemicolon = (tokens: Token[]): Token[] => {
   // "; ; abc.xyz();;123.print();;" => "abc.xyz();123.print();;"
   while (tokens.length > 1 && isTerminator(tokens[0])) {
     tokens.shift();
@@ -96,9 +80,9 @@ function filterSemicolon(tokens: Token[]): Token[] {
     tokens.pop();
   }
   return filter2(filter1(tokens));
-}
+};
 
-function filter1(tokens: Token[]): Token[] {
+const filter1 = (tokens: Token[]): Token[] => {
   const result: Token[] = [];
   for (let i = 0; i < tokens.length - 1; i++) {
     if (isTerminator(tokens[i]) && isTerminator(tokens[i + 1])) {
@@ -116,9 +100,9 @@ function filter1(tokens: Token[]): Token[] {
   }
   result.push(tokens[tokens.length - 1]!); // last one
   return result;
-}
+};
 
-function filter2(tokens: Token[]): Token[] {
+const filter2 = (tokens: Token[]): Token[] => {
   const result: Token[] = [];
   for (let i = 1; i < tokens.length; i++) {
     if (isLPar(tokens[i - 1]) && isTerminator(tokens[i])) {
@@ -133,4 +117,24 @@ function filter2(tokens: Token[]): Token[] {
   }
   result.unshift(tokens[0]); // first one
   return result;
-}
+};
+
+export const isTerminator = (t: Token) => {
+  return t.type === 'binop' && (t.value === ';' || t.value === '\n');
+};
+
+export const isLPar = (t: Token) => {
+  return t.type === '(';
+};
+
+export const isRPar = (t: Token) => {
+  return t.type === ')';
+};
+
+export const isBinOp = (t: Token) => {
+  return t.type === 'binop';
+};
+
+export const isSym = (t: Token) => {
+  return t.type === 'sym';
+};

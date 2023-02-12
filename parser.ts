@@ -31,11 +31,11 @@ class TokenReader {
   drop(tokenStr: string) {
     const t = this.next();
     if (t.value !== tokenStr)
-      throw `ERROR TokenReader::drop("${tokenStr}") => curr=="${t.value}"`;
+      throw new Error(`ERROR TokenReader::drop("${tokenStr}")=>"${t.value}"`);
   }
 }
 
-function binOpRate(op: string): number {
+const binOpRate = (op: string): number => {
   if (op === '.') return 0;
   if (op === '*' || op === '/' || op === '%') return 1;
   if (op === '+' || op === '-') return 2;
@@ -46,22 +46,22 @@ function binOpRate(op: string): number {
   if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(op)) return 8;
   if (op === ';') return 9;
   if (op === ',') return 10;
-  throw `ERROR binOpRate() =>unknown BinOp(${op})`;
-}
+  throw new Error(`ERROR binOpRate() =>unknown BinOp(${op})`);
+};
 
-export function parse(tokens: Token[]): BoObject {
+export const parse = (tokens: Token[]): BoObject => {
   const reader = new TokenReader(tokens);
   // parser starts (binOpRate() === 9)
   // "," operator does not exist in top level program
   const result = parseBinOp(reader, 9);
   return result;
-}
+};
 
-function parseBinOp(reader: TokenReader, depth: number): BoObject {
+const parseBinOp = (reader: TokenReader, depth: number): BoObject => {
   if (depth === -1) {
     return parseFactor(reader);
   } else if (reader.endOfToken()) {
-    throw 'ERROR parseBinOp(end of code) ';
+    throw new Error('ERROR parseBinOp(end of code)');
   } else {
     const result = parseBinOp(reader, depth - 1);
     if (reader.endOfToken()) {
@@ -80,9 +80,13 @@ function parseBinOp(reader: TokenReader, depth: number): BoObject {
     }
     return result;
   }
-}
+};
 
-function parseBinOp2(reader: TokenReader, lhs: any, depth: number): BoObject {
+const parseBinOp2 = (
+  reader: TokenReader,
+  lhs: any,
+  depth: number
+): BoObject => {
   let result = lhs;
   while (true) {
     if (reader.endOfToken()) {
@@ -97,9 +101,9 @@ function parseBinOp2(reader: TokenReader, lhs: any, depth: number): BoObject {
       return result;
     }
   }
-}
+};
 
-function parseFactor(reader: TokenReader): BoObject {
+const parseFactor = (reader: TokenReader): BoObject => {
   const token = reader.next();
   if (token.type === 'num') {
     return new Num(Number(token.value));
@@ -108,17 +112,17 @@ function parseFactor(reader: TokenReader): BoObject {
   } else if (token.type === '(') {
     return parseParents(reader);
   } else if (token.type === ')') {
-    throw "ERROR parseFactor() syntax error => ')' unmatch";
+    throw new Error("ERROR parseFactor() syntax error => ')' unmatch");
   } else if (token.type === 'sym') {
     const s = token.value;
     return parseMessage(s, reader);
   } else {
     //token.type === 'binop'
-    throw 'ERROR parseFactor() => unknown operator';
+    throw new Error('ERROR parseFactor() => unknown operator');
   }
-}
+};
 
-function parseMessage(slotName: string, reader: TokenReader): Message {
+const parseMessage = (slotName: string, reader: TokenReader): Message => {
   if (reader.restCount() < 2) {
     return new Message(undefined, slotName);
   } else if (isLPar(reader.seeNext())) {
@@ -139,24 +143,24 @@ function parseMessage(slotName: string, reader: TokenReader): Message {
   } else {
     return new Message(undefined, slotName);
   }
-}
+};
 
-function parseParents(reader: TokenReader): BoObject {
+const parseParents = (reader: TokenReader): BoObject => {
   const result = parseBinOp(reader, 9);
   reader.drop(')');
   return result;
-}
+};
 
-function toArray(obj: BoObject): BoObject[] {
+const toArray = (obj: BoObject): BoObject[] => {
   if (obj instanceof Message && isBinOpMessage(obj, ',')) {
     return toArray(obj.receiver!).concat(obj.args![0]);
   } else {
     return [obj];
   }
-}
+};
 
-export function isBinOpMessage(obj: Message, op?: string): boolean {
+export const isBinOpMessage = (obj: Message, op?: string): boolean => {
   return (
     obj.receiver !== undefined && obj.slotName === op && obj.args?.length === 1
   );
-}
+};
