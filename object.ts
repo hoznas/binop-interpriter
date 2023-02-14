@@ -130,6 +130,7 @@ export class Fun extends BoObject {
     return `fun(${argStr}${this.body.str()})`;
   }
 }
+
 export class Macro extends BoObject {
   argList: string[];
   body: BoObject;
@@ -171,6 +172,7 @@ export class UserObject extends BoObject {
       .join(',');
     return '{' + s + '}';
   }
+
   clone(): UserObject {
     return new UserObject(this.memory.subMemory(), this);
   }

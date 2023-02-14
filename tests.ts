@@ -163,6 +163,8 @@ const evaluatorTest = () => {
       'numA := 111;numB := 222;myIf(numA<=numB, numA.print(), numB.print())',
       '111',
     ], // 111.print
+    ['if', 'if'],
+    ['if(1,"t","f")', '"t"'],
   ];
 
   const e = new Evaluator();

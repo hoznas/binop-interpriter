@@ -53,6 +53,7 @@ export const parse = (tokens: Token[]): BoObject => {
   const reader = new TokenReader(tokens);
   // parser starts (binOpRate() === 9)
   // "," operator does not exist in top level program
+  // "," operator exist just in argument list
   const result = parseBinOp(reader, 9);
   return result;
 };
@@ -71,9 +72,7 @@ const parseBinOp = (reader: TokenReader, depth: number): BoObject => {
       if (isRPar(next)) {
         return result;
       } else {
-        if (isBinOp(next) && binOpRate(next.value) === depth) {
-          return parseBinOp2(reader, result, depth);
-        } else if (isSym(next) && binOpRate(next.value) === depth) {
+        if (isBinOp(next) || (isSym(next) && binOpRate(next.value) === depth)) {
           return parseBinOp2(reader, result, depth);
         }
       }
@@ -111,11 +110,11 @@ const parseFactor = (reader: TokenReader): BoObject => {
     return new Str(token.value);
   } else if (token.type === '(') {
     return parseParents(reader);
-  } else if (token.type === ')') {
-    throw new Error("ERROR parseFactor() syntax error => ')' unmatch");
   } else if (token.type === 'sym') {
     const s = token.value;
     return parseMessage(s, reader);
+  } else if (token.type === ')') {
+    throw new Error("ERROR parseFactor() syntax error => ')' unmatch");
   } else {
     //token.type === 'binop'
     throw new Error('ERROR parseFactor() => unknown operator');
@@ -123,25 +122,25 @@ const parseFactor = (reader: TokenReader): BoObject => {
 };
 
 const parseMessage = (slotName: string, reader: TokenReader): Message => {
-  if (reader.restCount() < 2) {
-    return new Message(undefined, slotName);
-  } else if (isLPar(reader.seeNext())) {
-    if (isRPar(reader.seeNext(2))) {
-      // no argument
-      const message = new Message(undefined, slotName, []);
-      reader.drop('(');
-      reader.drop(')');
-      return message;
-    } else {
-      // some argument(s)
-      reader.next(); // drop "("
-      const args = parseBinOp(reader, 10);
-      const message = new Message(undefined, slotName, toArray(args));
-      reader.drop(')');
-      return message;
-    }
+  if (reader.restCount() >= 2 && isLPar(reader.seeNext(1))) {
+    const args = parseArgParents(reader);
+    return new Message(undefined, slotName, args);
   } else {
     return new Message(undefined, slotName);
+  }
+};
+
+const parseArgParents = (reader: TokenReader): BoObject[] => {
+  reader.drop('(');
+  if (isRPar(reader.seeNext())) {
+    // no argument
+    reader.drop(')');
+    return [];
+  } else {
+    // some argument(s)
+    const args = toArray(parseBinOp(reader, 10));
+    reader.drop(')');
+    return args;
   }
 };
 
@@ -159,8 +158,10 @@ const toArray = (obj: BoObject): BoObject[] => {
   }
 };
 
-export const isBinOpMessage = (obj: Message, op?: string): boolean => {
-  return (
-    obj.receiver !== undefined && obj.slotName === op && obj.args?.length === 1
-  );
+const isBinOpMessage = (obj: Message, op?: string): boolean => {
+  if (obj.receiver !== undefined && obj.args?.length === 1) {
+    if (op) return obj.slotName === op;
+    else true;
+  }
+  return false;
 };

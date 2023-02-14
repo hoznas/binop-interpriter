@@ -1,4 +1,5 @@
 import {
+  BuiltinFunction,
   EVAL_NODE,
   EVAL_STR,
   FUN,
@@ -31,6 +32,13 @@ export class Evaluator {
       new UserObject(this.rootObjectSlot)
     );
     this.rootEnvironmentSlot.define('nil', NIL);
+
+    this.rootEnvironmentSlot.define('if', IF);
+    this.rootEnvironmentSlot.define('fun', FUN);
+    this.rootEnvironmentSlot.define('macro', MACRO);
+    this.rootEnvironmentSlot.define('evalNode', EVAL_NODE);
+    this.rootEnvironmentSlot.define('evalStr', EVAL_STR);
+    this.rootEnvironmentSlot.define('message', MESSAGE);
   }
   eval(code: string): BoObject {
     return evalStr(code, this.rootEnvironmentSlot);
@@ -69,20 +77,22 @@ export const evalMessage = (mes: Message, env: Memory): BoObject => {
   if (result) return result;
 
   const receiver = mes.receiver ? evalNode(mes.receiver, env) : undefined;
-  let value: BoObject | undefined;
+  let f: BoObject | undefined;
   if (receiver && receiver instanceof UserObject) {
-    value = receiver.get(mes.slotName);
+    f = receiver.get(mes.slotName);
   } else {
-    value = env.get(mes.slotName);
+    f = env.get(mes.slotName);
   }
-  if (value instanceof Fun && mes.args) {
-    return evalFunCall(receiver as UserObject, value, mes.args, env);
-  } else if (value instanceof Macro && mes.args) {
-    return evalMacroCall(receiver as UserObject, value, mes.args, env);
-  } else if (value && !mes.args) {
-    return value;
+  if (f instanceof Fun && mes.args) {
+    return evalFunCall(receiver as UserObject, f, mes.args, env);
+  } else if (f instanceof Macro && mes.args) {
+    return evalMacroCall(receiver as UserObject, f, mes.args, env);
+  } else if (f instanceof BuiltinFunction && mes.args) {
+    return f.call(receiver, mes.args, env);
+  } else if (f && !mes.args) {
+    return f;
   } else {
-    throw `ERROR evalMessage() => ${value} is not fun or macro`;
+    throw `ERROR evalMessage() => ${f} is not fun or macro`;
   }
 };
 const evalIfDefaultFunction = (
@@ -96,21 +106,6 @@ const evalIfDefaultFunction = (
       return result;
     } else if (mes.slotName === 'clone' && mes.args?.length === 0) {
       return evalNode(mes.receiver, env).clone();
-    }
-  } else {
-    //!mes.receiver
-    if (mes.slotName === 'if' && mes.args) {
-      return IF(mes.args, env);
-    } else if (mes.slotName === 'fun' && mes.args) {
-      return FUN(mes.args, env);
-    } else if (mes.slotName === 'macro' && mes.args) {
-      return MACRO(mes.args, env);
-    } else if (mes.slotName === 'message' && mes.args) {
-      return MESSAGE(mes.args, env);
-    } else if (mes.slotName === 'evalNode' && mes.args) {
-      return EVAL_NODE(mes.args, env);
-    } else if (mes.slotName === 'evalStr' && mes.args) {
-      return EVAL_STR(mes.args, env);
     }
   }
   return undefined;
