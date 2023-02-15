@@ -21,3 +21,4 @@
 |builtin-functions.ts|組み込み関数の定義|
 |tests.ts|上記ファイルのテストファイル|
 |sample.bo|サンプルプログラム|
+|bo.bnf|文法規則。作成中。プログラムで使用していない。|
