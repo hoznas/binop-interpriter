@@ -157,11 +157,18 @@ evalNode(message("@@",5,"+",7)); "=> 12"
 evalStr("5+7"); "=> 12"
 
 "== マクロ =="
-myIf := macro(condition,trueCase,falseCase,
-   if(evalNode(condition), evalNode(trueCase), evalNode(falseCase)))
-numA := 111
-numB := 222
-myIf(numA<=numB, numA.print(), numB.print()); "=> 111と表示"
+while := macro(cond,block,
+  f:=fun(cond,block,
+    if(evalNode(cond),
+      evalNode(block);
+      f(cond,block),
+      nil));
+  f(cond,block))
+
+x := 0
+while(x<10,
+  x.print();x=x+1); "=> 0,1,2,3,4,5,6,7,8,9と、改行しながら表示"
+
 
 "==== Todo ===="
 "末尾再起の最適化"

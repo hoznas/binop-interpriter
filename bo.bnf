@@ -1,0 +1,10 @@
+<Program> ::= <BinOp> | <Str> | <Num> | <Call> | <Parents>
+<BinOp> ::= <Program> <Op> <Program>
+<Op> ::= "+" | "-" | "*" | "/" | "%" | "<" | ">" | "<=" | ">=" | "==" | "!=" | "&&" | "||" | "." | "," | ";" | ":=" | "=" 
+<Str> ::= "\"" <AnyChar>* "\""
+<AnyChar> ::= [a-z] | [A-Z] | [0-9] | " " | "_" | "and other characters(without double quote)"
+<Num> ::= [1-9] [0-9]*
+<Call> ::= <Sym> <ArgList>?
+<Sym> ::= ( [a-z] | [A-Z] | "_" ) ( [a-z] | [A-Z] | [0-9] | "_" )*
+<ArgList> ::= "(" ")" | "(" <Program> ")"
+<Parents> ::= "(" <Program> ")"
