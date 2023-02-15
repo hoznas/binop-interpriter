@@ -1,6 +1,7 @@
 # binop-interpriter
 ## 特徴
 サンプルコードsample.boに書いてあります。
+https://github.com/hoznas/binop-interpriter/blob/main/sample.bo
 
 ## 実行
 ### サンプル実行
