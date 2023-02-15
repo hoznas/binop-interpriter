@@ -1,15 +1,16 @@
 # binop-interpriter
 ## 特徴
 サンプルコードsample.boに書いてあります。
-https://github.com/hoznas/binop-interpriter/blob/main/sample.bo
+- https://github.com/hoznas/binop-interpriter/blob/main/sample.bo
+
 
 ## 実行
-### サンプル実行
+### サンプルの実行
 ```tsc && node main sample.bo```
-
 
 ### テストの実行
 ```tsc && node tests```
+
 
 ## ファイル構成
 |ファイル名|概要|
