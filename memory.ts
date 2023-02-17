@@ -1,12 +1,13 @@
-import { BoObject } from './object';
-
+import { BoObject, Fun } from './object';
 type map = Map<string, BoObject>;
 export class Memory {
   super: Memory | undefined;
   slots: map;
+  current: Fun | undefined;
   constructor(superMemory: Memory | undefined = undefined) {
     this.super = superMemory;
     this.slots = new Map<string, BoObject>();
+    this.current = undefined;
   }
   subMemory() {
     return new Memory(this);

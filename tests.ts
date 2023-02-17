@@ -130,6 +130,8 @@ const evaluatorTest = () => {
     ['o:=Object.clone();o.x:=1', '1'],
     ['o', '{x:1}'],
     ['o.x', '1'],
+    ['9999.print()', '9999'],
+
     ['cons:=fun(a,b,o:=Object.clone();o.car=a;o.cdr=b;o);1', '1'],
     ['cons(1,2)', '{car:1,cdr:2}'],
     ['list:=fun(i,n,if(i<n,cons(i,list(i+1,n)),nil));1', '1'],
@@ -165,11 +167,12 @@ const evaluatorTest = () => {
     ], // 111.print
     ['if', 'if'],
     ['if(1,"t","f")', '"t"'],
+    //['loop := fun(1.print();loop());loop()', 'nil'],
   ];
 
   const e = new Evaluator();
   for (let [code, mustbe] of tests) {
-    //console.log(`>>>>>>>` + code);
+    console.log(`>>>>>>>` + code);
     const result = e.eval(code).str();
     if (result !== mustbe) {
       console.log('[CODE]' + code);

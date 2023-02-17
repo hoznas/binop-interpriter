@@ -72,6 +72,7 @@ export class Message extends BoObject {
   receiver: BoObject | undefined;
   slotName: string;
   args?: BoObject[];
+  isTailCall: boolean;
   constructor(
     receiver: BoObject | undefined,
     slotName: string,
@@ -79,6 +80,7 @@ export class Message extends BoObject {
   ) {
     super();
     this.receiver = receiver;
+    this.isTailCall = false;
     if (slotName !== '.') {
       this.slotName = slotName;
       this.args = args;
@@ -123,11 +125,23 @@ export class Fun extends BoObject {
       else throw new Error(`ERROR new Fun() => type error. value=${e.str()}`);
     });
     this.createdEnv = env;
+    this.findTailCall(this.body);
   }
   str(): string {
     const argStr =
       this.argList.length === 0 ? '' : this.argList.join(',') + ',';
     return `fun(${argStr}${this.body.str()})`;
+  }
+  findTailCall(node: BoObject): void {
+    if (node instanceof Message && node.args) {
+      if (node.slotName === 'if' || node.slotName === ';') {
+        if (node.args[1]) this.findTailCall(node.args[1]);
+        if (node.args[2]) this.findTailCall(node.args[2]);
+      } else if (/^[a-zA-Z_]/.test(node.slotName)) {
+        // user defined functions
+        node.isTailCall = true;
+      }
+    }
   }
 }
 
@@ -172,7 +186,6 @@ export class UserObject extends BoObject {
       .join(',');
     return '{' + s + '}';
   }
-
   clone(): UserObject {
     return new UserObject(this.memory.subMemory(), this);
   }
@@ -188,4 +201,13 @@ export class UserObject extends BoObject {
   get(name: string): BoObject | undefined {
     return this.memory.get(name);
   }
+}
+
+export class TailCallNotification {
+  constructor(
+    public _this: UserObject | undefined,
+    public fun: Fun,
+    public args: BoObject[],
+    public callerEnv: Memory
+  ) {}
 }

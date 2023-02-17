@@ -16,6 +16,7 @@ import {
   NIL,
   Num,
   Str,
+  TailCallNotification,
   UserObject,
 } from './object';
 import { parse } from './parser';
@@ -84,7 +85,13 @@ export const evalMessage = (mes: Message, env: Memory): BoObject => {
     f = env.get(mes.slotName);
   }
   if (f instanceof Fun && mes.args) {
-    return evalFunCall(receiver as UserObject, f, mes.args, env);
+    return evalFunCall(
+      receiver as UserObject,
+      f,
+      mes.args,
+      mes.isTailCall,
+      env
+    );
   } else if (f instanceof Macro && mes.args) {
     return evalMacroCall(receiver as UserObject, f, mes.args, env);
   } else if (f instanceof BuiltinFunction && mes.args) {
@@ -114,15 +121,46 @@ const evalFunCall = (
   _this: UserObject | undefined,
   fun: Fun,
   args: BoObject[],
+  isTailCall: boolean,
   callerEnv: Memory
 ): BoObject => {
-  const closure = bind(
-    _this,
-    fun.argList,
-    args.map((arg) => evalNode(arg, callerEnv)),
-    fun.createdEnv.subMemory()
-  );
-  return evalNode(fun.body, closure);
+  //console.log(
+  //  `evalFunCall(${_this?.str()}|${fun.str()}|${args.map((e) =>
+  //    e.str()
+  // )}|${isTailCall})`
+  //);
+  //console.log('VVVVVVVVVVVVV');
+  //console.log(callerEnv);
+  //console.log('~~~~~~~~~~~~~');
+  if (isTailCall && fun.createdEnv.current === fun) {
+    console.log('TailCall');
+    throw TailCallNotification;
+  }
+  while (true) {
+    try {
+      const createdMemory = fun.createdEnv.subMemory();
+      createdMemory.current = fun;
+      const closure = bind(
+        _this,
+        fun.argList,
+        args.map((arg) => evalNode(arg, callerEnv)),
+        createdMemory
+      );
+      return evalNode(fun.body, closure);
+    } catch (err: any) {
+      if (err instanceof TailCallNotification) {
+        console.log('A');
+        _this = err._this;
+        fun = err.fun;
+        args = err.args;
+        callerEnv = err.callerEnv;
+        continue;
+      } else {
+        console.log('B');
+        throw err;
+      }
+    }
+  }
 };
 const evalMacroCall = (
   _this: UserObject | undefined,
