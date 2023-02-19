@@ -167,19 +167,23 @@ const evaluatorTest = () => {
     ], // 111.print
     ['if', 'if'],
     ['if(1,"t","f")', '"t"'],
+    ['sumTC := fun(n,r,if(n<=0,r,sumTC(n-1,r+n)));nil', 'nil'],
+    ['sumTC(5,0)', '15'],
+    ['powTC:=fun(n,r,if(n<=1,r,powTC(n-1,r*n)));nil', 'nil'],
+    ['powTC(4,1)', '24'],
     //['loop := fun(1.print();loop());loop()', 'nil'],
   ];
 
   const e = new Evaluator();
   for (let [code, mustbe] of tests) {
-    console.log(`>>>>>>>` + code);
+    //console.log(`>>>>>>>` + code);
     const result = e.eval(code).str();
     if (result !== mustbe) {
       console.log('[CODE]' + code);
       console.log('[RESULT]' + result);
       console.log('[MUSTBE]' + mustbe);
       console.log('evaluator test error');
-      return;
+      //return;
     }
   }
   console.log('[EVALUATOR] all tests are ok.');

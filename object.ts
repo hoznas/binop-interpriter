@@ -103,10 +103,16 @@ export class Message extends BoObject {
     } else {
       argsStr = '';
     }
-    if (this.slotName === '.' && this.args?.length === 1)
+    if (this.slotName === '.' && this.args?.length === 1) {
       return receiverStr + '.' + this.args![0].str();
-    else if (this.receiver === undefined) return this.slotName + argsStr;
-    else return receiverStr + '.' + this.slotName + argsStr;
+    } else {
+      const slotName = this.slotName; //+ (this.isTailCall ? '$' : '');
+      if (this.receiver === undefined) {
+        return slotName + argsStr;
+      } else {
+        return receiverStr + '.' + slotName + argsStr;
+      }
+    }
   }
 }
 

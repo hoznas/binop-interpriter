@@ -16,7 +16,6 @@ import {
   NIL,
   Num,
   Str,
-  TailCallNotification,
   UserObject,
 } from './object';
 import { parse } from './parser';
@@ -125,42 +124,42 @@ const evalFunCall = (
   callerEnv: Memory
 ): BoObject => {
   //console.log(
-  //  `evalFunCall(${_this?.str()}|${fun.str()}|${args.map((e) =>
-  //    e.str()
-  // )}|${isTailCall})`
+  //`evalFunCall(${_this?.str()}|${fun.str()}|${args.map((e) =>
+  //e.str()
+  //)}|${isTailCall})`
   //);
   //console.log('VVVVVVVVVVVVV');
   //console.log(callerEnv);
   //console.log('~~~~~~~~~~~~~');
-  if (isTailCall && fun.createdEnv.current === fun) {
-    console.log('TailCall');
-    throw TailCallNotification;
-  }
-  while (true) {
-    try {
-      const createdMemory = fun.createdEnv.subMemory();
-      createdMemory.current = fun;
-      const closure = bind(
-        _this,
-        fun.argList,
-        args.map((arg) => evalNode(arg, callerEnv)),
-        createdMemory
-      );
-      return evalNode(fun.body, closure);
-    } catch (err: any) {
-      if (err instanceof TailCallNotification) {
-        console.log('A');
-        _this = err._this;
-        fun = err.fun;
-        args = err.args;
-        callerEnv = err.callerEnv;
-        continue;
-      } else {
-        console.log('B');
-        throw err;
-      }
-    }
-  }
+  //const f = fun.createdEnv.get('**CURRENT FUNCTION**');
+  //if (isTailCall) {
+  //  console.log(`last function is ${f ? '' : 'not'} defined`);
+  //  console.log(`match is ${f === fun ? 'ok' : 'ng'}`);
+  //}
+  let scope = fun.createdEnv.subMemory();
+  scope.defineForce('**CURRENT FUNCTION**', fun);
+  //while (true) {
+  //try {
+  const closure = bind(
+    _this,
+    fun.argList,
+    args.map((arg) => evalNode(arg, callerEnv)),
+    scope
+  );
+  return evalNode(fun.body, closure);
+  //} catch (err: any) {
+  //if (err instanceof TailCallNotification) {
+  //console.log('A');
+  //_this = err._this;
+  //fun = err.fun;
+  //args = err.args;
+  //continue;
+  //} else {
+  //console.log('B');
+  //throw err;
+  //}
+  //}
+  //}
 };
 const evalMacroCall = (
   _this: UserObject | undefined,
