@@ -84,13 +84,7 @@ export const evalMessage = (mes: Message, env: Memory): BoObject => {
     f = env.get(mes.slotName);
   }
   if (f instanceof Fun && mes.args) {
-    return evalFunCall(
-      receiver as UserObject,
-      f,
-      mes.args,
-      mes.isTailCall,
-      env
-    );
+    return evalFunCall(receiver as UserObject, f, mes.args, env);
   } else if (f instanceof Macro && mes.args) {
     return evalMacroCall(receiver as UserObject, f, mes.args, env);
   } else if (f instanceof BuiltinFunction && mes.args) {
@@ -120,46 +114,15 @@ const evalFunCall = (
   _this: UserObject | undefined,
   fun: Fun,
   args: BoObject[],
-  isTailCall: boolean,
   callerEnv: Memory
 ): BoObject => {
-  //console.log(
-  //`evalFunCall(${_this?.str()}|${fun.str()}|${args.map((e) =>
-  //e.str()
-  //)}|${isTailCall})`
-  //);
-  //console.log('VVVVVVVVVVVVV');
-  //console.log(callerEnv);
-  //console.log('~~~~~~~~~~~~~');
-  //const f = fun.createdEnv.get('**CURRENT FUNCTION**');
-  //if (isTailCall) {
-  //  console.log(`last function is ${f ? '' : 'not'} defined`);
-  //  console.log(`match is ${f === fun ? 'ok' : 'ng'}`);
-  //}
-  let scope = fun.createdEnv.subMemory();
-  scope.defineForce('**CURRENT FUNCTION**', fun);
-  //while (true) {
-  //try {
   const closure = bind(
     _this,
     fun.argList,
     args.map((arg) => evalNode(arg, callerEnv)),
-    scope
+    fun.createdEnv.subMemory()
   );
   return evalNode(fun.body, closure);
-  //} catch (err: any) {
-  //if (err instanceof TailCallNotification) {
-  //console.log('A');
-  //_this = err._this;
-  //fun = err.fun;
-  //args = err.args;
-  //continue;
-  //} else {
-  //console.log('B');
-  //throw err;
-  //}
-  //}
-  //}
 };
 const evalMacroCall = (
   _this: UserObject | undefined,

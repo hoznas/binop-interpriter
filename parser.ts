@@ -1,5 +1,5 @@
 import { BoObject, Message, Num, Str } from './object';
-import { isBinOp, isLPar, isRPar, isSym, Token } from './tokenizer';
+import { Token, isBinOp, isLPar, isRPar, isSym } from './tokenizer';
 
 class TokenReader {
   tokens: Token[];
@@ -52,8 +52,8 @@ const binOpRate = (op: string): number => {
 export const parse = (tokens: Token[]): BoObject => {
   const reader = new TokenReader(tokens);
   // parser starts (binOpRate() === 9)
-  // "," operator does not exist in top level program
-  // "," operator exist just in argument list
+  // "," operator does not exists only in the argument list.
+  // not in top level program
   const result = parseBinOp(reader, 9);
   return result;
 };
@@ -117,7 +117,7 @@ const parseFactor = (reader: TokenReader): BoObject => {
     throw new Error("ERROR parseFactor() syntax error => ')' unmatch");
   } else {
     //token.type === 'binop'
-    throw new Error('ERROR parseFactor() => unknown operator');
+    throw new Error(`ERROR parseFactor() => arg=BinOp(${token.value})`);
   }
 };
 
@@ -158,7 +158,7 @@ const toArray = (obj: BoObject): BoObject[] => {
   }
 };
 
-const isBinOpMessage = (obj: Message, op?: string): boolean => {
+const isBinOpMessage = (obj: Message, op: string): boolean => {
   if (obj.receiver !== undefined && obj.args?.length === 1) {
     if (op) return obj.slotName === op;
     else true;

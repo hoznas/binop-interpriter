@@ -1,13 +1,12 @@
-import { BoObject, Fun } from './object';
+import { BoObject } from './object';
+
 type map = Map<string, BoObject>;
 export class Memory {
   super: Memory | undefined;
   slots: map;
-  current: Fun | undefined;
   constructor(superMemory: Memory | undefined = undefined) {
     this.super = superMemory;
     this.slots = new Map<string, BoObject>();
-    this.current = undefined;
   }
   subMemory() {
     return new Memory(this);
@@ -49,8 +48,8 @@ export class Memory {
   }
   show() {
     this.super?.show();
-    for (let [name, value] of this.slots) {
+    this.slots.forEach((value, name) => {
       console.log(`Slot.Show(${name} = ${value.str()})`);
-    }
+    });
   }
 }

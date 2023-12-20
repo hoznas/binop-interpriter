@@ -26,7 +26,11 @@ export class BuiltinFunction extends BoObject {
 
 export const IF = new BuiltinFunction(
   'if',
-  (receiver: BoObject | undefined, args: BoObject[], env: Memory): BoObject => {
+  (
+    _receiver: BoObject | undefined,
+    args: BoObject[],
+    env: Memory
+  ): BoObject => {
     if (args.length === 3 || args.length === 2) {
       const [cond, trueCase, falseCase] = args;
       if (evalNode(cond, env) !== NIL) return evalNode(trueCase, env);
@@ -39,7 +43,11 @@ export const IF = new BuiltinFunction(
 
 export const FUN = new BuiltinFunction(
   'fun',
-  (receiver: BoObject | undefined, args: BoObject[], env: Memory): BoObject => {
+  (
+    _receiver: BoObject | undefined,
+    args: BoObject[],
+    env: Memory
+  ): BoObject => {
     if (args?.length >= 1) return new Fun(args, env);
     throw new Error(`ERROR fun(args.len===${args?.length}) arg length error`);
   }
@@ -47,7 +55,11 @@ export const FUN = new BuiltinFunction(
 
 export const MACRO = new BuiltinFunction(
   'macro',
-  (receiver: BoObject | undefined, args: BoObject[], env: Memory): BoObject => {
+  (
+    _receiver: BoObject | undefined,
+    args: BoObject[],
+    env: Memory
+  ): BoObject => {
     if (args.length >= 1) return new Macro(args);
     throw new Error(`ERROR macro(args.len===${args.length}) arg length error`);
   }
@@ -55,7 +67,11 @@ export const MACRO = new BuiltinFunction(
 
 export const MESSAGE = new BuiltinFunction(
   'message',
-  (receiver: BoObject | undefined, args: BoObject[], env: Memory): BoObject => {
+  (
+    _receiver: BoObject | undefined,
+    args: BoObject[],
+    env: Memory
+  ): BoObject => {
     if (args.length >= 2 && args[0] instanceof Str) {
       const type = args[0].value;
       if (type == '__' && args.length === 2 && args[1] instanceof Str) {
@@ -84,7 +100,11 @@ export const MESSAGE = new BuiltinFunction(
 
 export const EVAL_NODE = new BuiltinFunction(
   'evalNode',
-  (receiver: BoObject | undefined, args: BoObject[], env: Memory): BoObject => {
+  (
+    _receiver: BoObject | undefined,
+    args: BoObject[],
+    env: Memory
+  ): BoObject => {
     if (args.length === 1) return evalNode(evalNode(args[0], env), env);
     throw new Error(
       `ERROR evalNode(args.len===${args.length}) arg length error`
@@ -94,7 +114,11 @@ export const EVAL_NODE = new BuiltinFunction(
 
 export const EVAL_STR = new BuiltinFunction(
   'evalStr',
-  (receiver: BoObject | undefined, args: BoObject[], env: Memory): BoObject => {
+  (
+    _receiver: BoObject | undefined,
+    args: BoObject[],
+    env: Memory
+  ): BoObject => {
     if (args.length === 1 && args[0] instanceof Str) {
       return evalStr(args[0].value, env);
     }
