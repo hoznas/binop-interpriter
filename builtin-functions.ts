@@ -1,6 +1,6 @@
 import { evalNode, evalStr } from './evaluator';
 import { Memory } from './memory';
-import { BoObject, Fun, Macro, Message, NIL, Str } from './object';
+import { BoObject, Fun, Macro, Message, Str } from './object';
 
 type FuncType = (
   receiver: BoObject | undefined,
@@ -24,23 +24,6 @@ export class BuiltinFunction extends BoObject {
   }
 }
 
-export const IF = new BuiltinFunction(
-  'if',
-  (
-    _receiver: BoObject | undefined,
-    args: BoObject[],
-    env: Memory
-  ): BoObject => {
-    if (args.length === 3 || args.length === 2) {
-      const [cond, trueCase, falseCase] = args;
-      if (evalNode(cond, env) !== NIL) return evalNode(trueCase, env);
-      else if (falseCase) return evalNode(falseCase, env);
-      else return NIL;
-    }
-    throw new Error(`ERROR if(args.len === ${args})  arg length error`);
-  }
-);
-
 export const FUN = new BuiltinFunction(
   'fun',
   (
@@ -58,7 +41,7 @@ export const MACRO = new BuiltinFunction(
   (
     _receiver: BoObject | undefined,
     args: BoObject[],
-    env: Memory
+    _env: Memory
   ): BoObject => {
     if (args.length >= 1) return new Macro(args);
     throw new Error(`ERROR macro(args.len===${args.length}) arg length error`);
@@ -70,7 +53,7 @@ export const MESSAGE = new BuiltinFunction(
   (
     _receiver: BoObject | undefined,
     args: BoObject[],
-    env: Memory
+    _env: Memory
   ): BoObject => {
     if (args.length >= 2 && args[0] instanceof Str) {
       const type = args[0].value;
@@ -127,16 +110,3 @@ export const EVAL_STR = new BuiltinFunction(
     );
   }
 );
-/*
-export const PRINT = new BuiltinFunction(
-  'print',
-  (receiver: BoObject | undefined, args: BoObject[], env: Memory): BoObject => {
-    if (receiver && args?.length === 0) {
-      const result = evalNode(receiver, env);
-      console.log(result.str());
-      return result;
-    }
-    throw new Error(`ERROR PRINT(args.len===${args.length}) arg length error`);
-  }
-);
-*/

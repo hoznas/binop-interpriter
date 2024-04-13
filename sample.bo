@@ -60,7 +60,7 @@ n.print(); "=> -3と表示"
 "first".print();"second".print(); "=> first,secondの順に表示"
 
 "== 条件分岐 =="
-if(n==7,
+(n==7).if(
   "seven",
   "not seven"
 ).print(); "=> not sevenと表示"
@@ -76,7 +76,7 @@ addPrint(3,6); "=> 9と表示"
 "== 繰り返し処理 =="
 "ループ表現は無く、再帰のみで繰り返し処理を行う"
 factorial := fun(n,
-  if(n>1,
+  (n>1).if(
     n * factorial(n-1),
     1))
 factorial(4).print(); "=> 24と表示(4! = 24)"
@@ -127,11 +127,11 @@ Cell := fun(a,b,
 	cellClass.tail := b
 	cellClass)
 list := fun(i,n,
-	if(i<n,
+	(i<n).if(
 		Cell(i,list(i+1,n)),
 		nil))
 sum := fun(lst,
-	if(lst,
+	(lst).if(
 		lst.head + sum(lst.tail),
 		0));
 
@@ -145,12 +145,7 @@ sum(numbers).print(); "=> 10を表示"
 "_@"; "targetなし、呼び出しあり"
 "@_"; "targetあり、呼び出しなし"
 "@@"; "targetあり、呼び出しあり"
-message("__", "method"); "=> method"
-message("_@", "method"); "=> method()"
-message("_@", "method", 1, 2, 3); "=> method(1,2,3)"
-message("@_", target, "method"); "=> target.method"
-message("@@", target, "method"); "=> target.method()"
-message("@@", target, "method", 1, 2, 3); "=> target.method(1,2,3)"
+
 
 "== eval =="
 evalNode(message("@@",5,"+",7)); "=> 12"
@@ -159,7 +154,7 @@ evalStr("5+7"); "=> 12"
 "== マクロ =="
 while := macro(cond,block,
   f:=fun(cond,block,
-    if(evalNode(cond),
+    evalNode(cond).if(
       evalNode(block);
       f(cond,block),
       nil));

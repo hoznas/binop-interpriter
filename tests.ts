@@ -120,9 +120,9 @@ const evaluatorTest = () => {
     ['fun(a,b,(a+b).print())', 'fun(a,b,a.+(b).print())'],
     ['add:=fun(a,b,a+b);add(6/3,2)', '4'],
     ['2>1', '1'],
-    ['if(2>1,r:="big",r:="small");r', '"big"'],
-    ['if(1>2,s:="big",s:="small");s', '"small"'],
-    ['pow:=fun(n,if(n<=1,1,n*pow(n-1)));pow(3)', '6'],
+    ['(2>1).if(r:="big",r:="small");r', '"big"'],
+    ['(1>2).if(s:="big",s:="small");s', '"small"'],
+    ['pow:=fun(n,(n<=1).if(1,n*pow(n-1)));pow(3)', '6'],
     ['create:=fun(c:=0;fun(c=c+1));counter:=create();counter();counter()', '2'],
     ['Object', '{}'],
     ['Object.clone()', '{}'],
@@ -132,12 +132,12 @@ const evaluatorTest = () => {
     ['o.x', '1'],
     ['cons:=fun(a,b,o:=Object.clone();o.car=a;o.cdr=b;o);1', '1'],
     ['cons(1,2)', '{car:1,cdr:2}'],
-    ['list:=fun(i,n,if(i<n,cons(i,list(i+1,n)),nil));1', '1'],
+    ['list:=fun(i,n,(i<n).if(cons(i,list(i+1,n)),nil));1', '1'],
     [
       'l:=list(0,10)',
       '{car:0,cdr:{car:1,cdr:{car:2,cdr:{car:3,cdr:{car:4,cdr:{car:5,cdr:{car:6,cdr:{car:7,cdr:{car:8,cdr:{car:9,cdr:nil}}}}}}}}}}',
     ],
-    ['sum:=fun(ls, if(ls, ls.car+sum(ls.cdr),0));1', '1'],
+    ['sum:=fun(ls, ls.if(ls.car+sum(ls.cdr),0));1', '1'],
     ['sum(l)', '45'],
     [
       'obj:=Object.clone();obj.v:=12;obj.f:=fun(a,b,this.v+a+b);obj.f(3,2)',
@@ -156,15 +156,14 @@ const evaluatorTest = () => {
     ['evalNode(message("@@",5,"+",7))', '12'],
     ['evalStr("5+7")', '12'],
     [
-      'myIf := macro(condition,trueCase,falseCase,if(evalNode(condition), evalNode(trueCase), evalNode(falseCase)));nil',
+      'myIf := macro(condition,trueCase,falseCase,evalNode(condition).if(evalNode(trueCase), evalNode(falseCase)));nil',
       'nil',
     ],
     [
       'numA := 111;numB := 222;myIf(numA<=numB, numA.print(), numB.print())',
       '111',
-    ], // 111.print
-    ['if', 'if'],
-    ['if(1,"t","f")', '"t"'],
+    ],
+    ['1.if("t","f")', '"t"'],
   ];
 
   const e = new Evaluator();

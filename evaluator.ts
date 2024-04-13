@@ -3,7 +3,6 @@ import {
   EVAL_NODE,
   EVAL_STR,
   FUN,
-  IF,
   MACRO,
   MESSAGE,
 } from './builtin-functions';
@@ -33,7 +32,6 @@ export class Evaluator {
     );
     this.rootEnvironmentSlot.define('nil', NIL);
 
-    this.rootEnvironmentSlot.define('if', IF);
     this.rootEnvironmentSlot.define('fun', FUN);
     this.rootEnvironmentSlot.define('macro', MACRO);
     this.rootEnvironmentSlot.define('evalNode', EVAL_NODE);
@@ -77,12 +75,11 @@ export const evalMessage = (mes: Message, env: Memory): BoObject => {
   if (result) return result;
 
   const receiver = mes.receiver ? evalNode(mes.receiver, env) : undefined;
-  let f: BoObject | undefined;
-  if (receiver && receiver instanceof UserObject) {
-    f = receiver.get(mes.slotName);
-  } else {
-    f = env.get(mes.slotName);
-  }
+  const f: BoObject | undefined =
+    receiver && receiver instanceof UserObject
+      ? receiver.get(mes.slotName)
+      : env.get(mes.slotName);
+
   if (f instanceof Fun && mes.args) {
     return evalFunCall(receiver as UserObject, f, mes.args, env);
   } else if (f instanceof Macro && mes.args) {
@@ -100,7 +97,14 @@ const evalIfDefaultFunction = (
   env: Memory
 ): BoObject | undefined => {
   if (mes.receiver) {
-    if (mes.slotName === 'print' && mes.args?.length === 0) {
+    if (
+      mes.slotName === 'if' &&
+      (mes.args?.length === 1 || mes.args?.length === 2)
+    ) {
+      const receiver = evalNode(mes.receiver, env);
+      const block = receiver !== NIL ? mes.args[0] : mes.args[1] || NIL;
+      return evalNode(block, env);
+    } else if (mes.slotName === 'print' && mes.args?.length === 0) {
       const result = evalNode(mes.receiver, env);
       console.log(result.str());
       return result;
@@ -207,6 +211,7 @@ const evalArithmeticOp = (
   }
   throw new Error(`ERROR evalArithmeticOp(${lhs.str()} ${op} ${rhs.str()})`);
 };
+
 const evalCompareOp = (
   lhs: BoObject,
   op: string,
