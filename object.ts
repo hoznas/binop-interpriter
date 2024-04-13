@@ -6,9 +6,6 @@ export abstract class BoObject {
     if (this === other) return 0;
     else return -1;
   }
-  _if(cond: BoObject, trueCase: BoObject, falseCase?: BoObject): BoObject {
-    return cond !== NIL ? trueCase : falseCase ?? NIL;
-  }
   clone(): BoObject {
     return this;
   }

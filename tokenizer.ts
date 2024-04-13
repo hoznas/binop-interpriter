@@ -35,10 +35,10 @@ const makeTokenList = (code: string, result: Token[] = []): Token[] => {
   }
 };
 
-const getToken = (code: string): [Token | false, string] => {
+const getToken = (code: string): [Token | null, string] => {
   //console.log(`getToken(${code})`)
   let match: RegExpMatchArray | null;
-  let token: Token | false;
+  let token: Token | null;
   if ((match = code.match(num))) {
     token = { type: 'num', value: match![1] };
   } else if ((match = code.match(str))) {
@@ -53,7 +53,7 @@ const getToken = (code: string): [Token | false, string] => {
   } else if ((match = code.match(terminator))) {
     token = { type: 'binop', value: ';' };
   } else if ((match = code.match(whiteSpace))) {
-    token = false;
+    token = null;
   } else if ((match = code.match(sym))) {
     token = { type: 'sym', value: match![1] };
   } else {

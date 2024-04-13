@@ -24,8 +24,9 @@
 "Hello world!"
 "ab" + "cd"; "=> abcd"
 "ab" + 12; "=> ab12"
-"abcd" / 2; "=> ab"
-"abcd" % 2; "=> cd"
+"文字列分割(lispのcar/cdrのように使えます)"
+"abcd" / 1; "=> a"
+"abcd" % 1; "=> bcd"
 
 "== 真偽値 =="
 nil; "nilは偽を表す唯一の値"
