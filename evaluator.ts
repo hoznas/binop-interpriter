@@ -5,6 +5,7 @@ import {
   FUN,
   MACRO,
   MESSAGE,
+  defaultMethodMap,
 } from './builtin-functions';
 import { Memory } from './memory';
 import {
@@ -48,10 +49,13 @@ export const evalStr = (code: string, env: Memory): BoObject => {
   const node = parse(tokens);
   return evalNode(node, env);
 };
+
 export const evalNode = (node: BoObject, env: Memory): BoObject => {
-  //console.log(`evalNode(${node.str()})`);
   // eval binary operator
-  if (node instanceof Message && node.receiver && node.args?.length === 1) {
+  if (!(node instanceof Message)) {
+    // Num,Str,Nil,UserObject,Fun,Macro
+    return node;
+  } else if (node.receiver && node.args?.length === 1) {
     // lhs/rhs => Left/Right Hand Side value
     const [lhs, op, rhs] = [node.receiver, node.slotName, node.args[0]];
     if (['+', '-', '*', '/', '%'].includes(op)) {
@@ -62,15 +66,11 @@ export const evalNode = (node: BoObject, env: Memory): BoObject => {
       return evalSpecialOp(lhs, op, rhs, env);
     }
   }
-  if (node instanceof Message) {
-    return evalMessage(node, env);
-  } else {
-    // Num,Str,Nil,UserObject,Fun,Macro
-    return node;
-  }
+  return evalMessage(node, env);
 };
+
 export const evalMessage = (mes: Message, env: Memory): BoObject => {
-  //console.log(`evalMessage(${mes.str()})`);
+  // console.log(`evalMessage(${mes.str()})`);
   const result = evalIfDefaultFunction(mes, env);
   if (result) return result;
 
@@ -92,29 +92,17 @@ export const evalMessage = (mes: Message, env: Memory): BoObject => {
     throw `ERROR evalMessage() => ${f} is not fun or macro`;
   }
 };
+
 const evalIfDefaultFunction = (
   mes: Message,
   env: Memory
 ): BoObject | undefined => {
-  if (mes.receiver) {
-    if (
-      mes.slotName === 'if' &&
-      (mes.args?.length === 1 || mes.args?.length === 2)
-    ) {
-      const receiver = evalNode(mes.receiver, env);
-      const block = receiver !== NIL ? mes.args[0] : mes.args[1] || NIL;
-      return evalNode(block, env);
-    } else if (mes.slotName === 'print' && mes.args?.length === 0) {
-      const result = evalNode(mes.receiver, env);
-      console.log(result.str());
-      return result;
-    } else if (mes.slotName === 'clone' && mes.args?.length === 0) {
-      return evalNode(mes.receiver, env).clone();
-    }
-  }
-  return undefined;
+  const method = defaultMethodMap[mes.slotName];
+  if (!method) return undefined;
+  return method(mes, env);
 };
-const evalFunCall = (
+
+export const evalFunCall = (
   _this: UserObject | undefined,
   fun: Fun,
   args: BoObject[],
@@ -128,6 +116,7 @@ const evalFunCall = (
   );
   return evalNode(fun.body, closure);
 };
+
 const evalMacroCall = (
   _this: UserObject | undefined,
   macro: Macro,
@@ -137,6 +126,7 @@ const evalMacroCall = (
   const closure = bind(_this, macro.argList, args, callerEnv.subMemory());
   return evalNode(macro.body, closure);
 };
+
 const bind = (
   _this: UserObject | undefined,
   argList: string[],
@@ -152,6 +142,7 @@ const bind = (
   if (_this) closure.defineForce('this', _this);
   return closure;
 };
+
 const evalSpecialOp = (
   lhs: BoObject,
   op: string,
@@ -180,6 +171,7 @@ const evalSpecialOp = (
     throw new Error(`ERROR evalSpecialOp(${lhs.str()} ${op} ${rhs.str()})`);
   }
 };
+
 const evalArithmeticOp = (
   lhs: BoObject,
   op: string,
@@ -230,6 +222,7 @@ const evalCompareOp = (
   // op === '>='
   return cmp >= 0 ? t : NIL;
 };
+
 const evalAssign = (
   flag: 'define' | 'update',
   message: Message,
@@ -246,11 +239,12 @@ const evalAssign = (
     if (!message.args) {
       const result = assignLocalVariable(flag, message.slotName, value, env);
       if (result) return result;
-      throw new Error('ERROR evalAssign() assign error');
+      throw new Error(`ERROR evalAssign() assign error. result =${result}.`);
     }
   }
   throw new Error('ERROR evalAssign()');
 };
+
 const assignObjectSlot = (
   receiverObj: UserObject,
   varName: string,
@@ -259,6 +253,7 @@ const assignObjectSlot = (
   //console.log(`assignObjectSlot(${receiverObj.str()},${varName},${value.str()})`)
   return receiverObj.assignToObject(varName, value);
 };
+
 const assignLocalVariable = (
   flag: 'define' | 'update',
   varName: string,
@@ -267,5 +262,5 @@ const assignLocalVariable = (
 ): BoObject | null => {
   //console.log(`assignLocalVariable(${flag},${varName},${value.str()})`);
   if (flag === 'define') return env.define(varName, value);
-  else return env.update(varName, value);
+  return env.update(varName, value);
 };

@@ -161,9 +161,10 @@ const evaluatorTest = () => {
     ],
     [
       'numA := 111;numB := 222;myIf(numA<=numB, numA.print(), numB.print())',
-      '111',
+      '111', // print 111
     ],
     ['1.if("t","f")', '"t"'],
+    ['v:=0;z:=fun(v<5).doWhile(v.print();v=v+1)', '5'], // print 0,1,2,3,4
   ];
 
   const e = new Evaluator();
