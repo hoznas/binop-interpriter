@@ -17,16 +17,16 @@ const tokenizerTest = () => {
     ],
   ];
   for (const test of tests) {
-    const [code, mustbe] = test;
+    const [code, mustBe] = test;
     const result = tokenize(code);
     const result_str = result
       .map((e) => {
         return e.value;
       })
       .join('|');
-    if (result_str !== mustbe) {
+    if (result_str !== mustBe) {
       console.log(
-        `TOKENIZER ERROR code=${code} result=${result_str} mustbe=${mustbe}`
+        `TOKENIZER ERROR code=${code} result=${result_str} mustBe=${mustBe}`
       );
       return;
     }
@@ -59,16 +59,16 @@ const parserTest = () => {
     ['obj func arg', 'obj.func(arg)'],
   ];
   for (const test of tests) {
-    const [code, mustbe] = test;
+    const [code, mustBe] = test;
     //console.log('>>>>>' + code);
     const tokens = tokenize(code);
     const exp = parse(tokens);
     const result_str = exp.str();
-    if (result_str !== mustbe) {
+    if (result_str !== mustBe) {
       console.log('PARSE ERROR');
       console.log('code  =' + code);
       console.log('result=' + result_str);
-      console.log('mustbe=' + mustbe);
+      console.log('mustBe=' + mustBe);
       return;
     }
   }
@@ -176,13 +176,13 @@ const evaluatorTest = () => {
   ];
 
   const e = new Evaluator();
-  for (let [code, mustbe] of tests) {
+  for (let [code, mustBe] of tests) {
     //console.log(`>>>>>>>` + code);
     const result = e.eval(code).str();
-    if (result !== mustbe) {
-      console.log('[CODE]' + code);
-      console.log('[RESULT]' + result);
-      console.log('[MUSTBE]' + mustbe);
+    if (result !== mustBe) {
+      console.log('[Code]' + code);
+      console.log('[Result]' + result);
+      console.log('[MustBe]' + mustBe);
       console.log('evaluator test error');
       return;
     }
