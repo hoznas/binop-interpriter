@@ -80,14 +80,20 @@ export const evalMessage = (mes: Message, env: Memory): BoObject => {
       ? receiver.get(mes.slotName)
       : env.get(mes.slotName);
 
-  if (f instanceof Fun && mes.args) {
-    return evalFunCall(receiver as UserObject, f, mes.args, env);
-  } else if (f instanceof Macro && mes.args) {
-    return evalMacroCall(receiver as UserObject, f, mes.args, env);
-  } else if (f instanceof BuiltinFunction && mes.args) {
-    return f.call(receiver, mes.args, env);
-  } else if (f && !mes.args) {
+  if (!f) {
+    throw new Error(`ERROR evalMessage() => ${mes.slotName} is not defined.`);
+  }
+
+  if (!mes.args) {
     return f;
+  }
+
+  if (f instanceof Fun) {
+    return evalFunCall(receiver as UserObject, f, mes.args, env);
+  } else if (f instanceof Macro) {
+    return evalMacroCall(receiver as UserObject, f, mes.args, env);
+  } else if (f instanceof BuiltinFunction) {
+    return f.call(receiver, mes.args, env);
   } else {
     throw `ERROR evalMessage() => ${f} is not fun or macro`;
   }

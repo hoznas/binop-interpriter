@@ -151,17 +151,13 @@ const parseParents = (reader: TokenReader): BoObject => {
 };
 
 const toArray = (obj: BoObject): BoObject[] => {
-  if (obj instanceof Message && isBinOpMessage(obj, ',')) {
-    return toArray(obj.receiver!).concat(obj.args![0]);
-  } else {
-    return [obj];
+  if (
+    obj instanceof Message &&
+    obj.receiver !== undefined &&
+    obj.slotName === ',' &&
+    obj.args?.length === 1
+  ) {
+    return [...toArray(obj.receiver), obj.args[0]];
   }
-};
-
-const isBinOpMessage = (obj: Message, op: string): boolean => {
-  if (obj.receiver !== undefined && obj.args?.length === 1) {
-    if (op) return obj.slotName === op;
-    else true;
-  }
-  return false;
+  return [obj];
 };
