@@ -152,11 +152,11 @@ const evalSpecialOp = (
   //console.log(`evalSpecialOp(${lhs.str()} ${op} ${rhs.str()})`);
   //= := . ; , && ||
   if (op === '&&') {
-    const elhs = evalNode(lhs, env);
-    return elhs === NIL ? NIL : evalNode(rhs, env);
+    const eLhs = evalNode(lhs, env);
+    return eLhs === NIL ? NIL : evalNode(rhs, env);
   } else if (op === '||') {
-    const elhs = evalNode(rhs, env);
-    return elhs !== NIL ? elhs : evalNode(rhs, env);
+    const eLhs = evalNode(lhs, env);
+    return eLhs !== NIL ? eLhs : evalNode(rhs, env);
   } else if (op === ';') {
     evalNode(lhs, env);
     return evalNode(rhs, env);
@@ -178,27 +178,27 @@ const evalArithmeticOp = (
   rhs: BoObject,
   env: Memory
 ): BoObject => {
-  //console.log(`evalArithmeticOp(${elhs.str()} ${op} ${erhs.str()})`);
-  const [elhs, erhs] = [evalNode(lhs, env), evalNode(rhs, env)];
-  if (elhs instanceof Num) {
+  //console.log(`evalArithmeticOp(${eLhs.str()} ${op} ${eRhs.str()})`);
+  const [eLhs, eRhs] = [evalNode(lhs, env), evalNode(rhs, env)];
+  if (eLhs instanceof Num) {
     const n =
-      erhs instanceof Num
-        ? erhs.value
-        : erhs instanceof Str
-        ? Number(erhs.value)
+      eRhs instanceof Num
+        ? eRhs.value
+        : eRhs instanceof Str
+        ? Number(eRhs.value)
         : undefined;
     if (n === undefined) throw new Error('ERROR evalArithmeticOp');
-    if (op === '+') return new Num(elhs.value + n);
-    if (op === '-') return new Num(elhs.value - n);
-    if (op === '*') return new Num(elhs.value * n);
-    if (op === '/') return new Num(elhs.value / n);
-    if (op === '%') return new Num(elhs.value % n);
-  } else if (elhs instanceof Str) {
-    if (op === '+' && (erhs instanceof Str || erhs instanceof Num)) {
-      return new Str(elhs.value.concat(erhs.value.toString()));
-    } else if (erhs instanceof Num) {
-      if (op === '/') return new Str(elhs.value.substring(0, erhs.value));
-      if (op === '%') return new Str(elhs.value.substring(erhs.value));
+    if (op === '+') return new Num(eLhs.value + n);
+    if (op === '-') return new Num(eLhs.value - n);
+    if (op === '*') return new Num(eLhs.value * n);
+    if (op === '/') return new Num(eLhs.value / n);
+    if (op === '%') return new Num(eLhs.value % n);
+  } else if (eLhs instanceof Str) {
+    if (op === '+' && (eRhs instanceof Str || eRhs instanceof Num)) {
+      return new Str(eLhs.value.concat(eRhs.value.toString()));
+    } else if (eRhs instanceof Num) {
+      if (op === '/') return new Str(eLhs.value.substring(0, eRhs.value));
+      if (op === '%') return new Str(eLhs.value.substring(eRhs.value));
     }
   }
   throw new Error(`ERROR evalArithmeticOp(${lhs.str()} ${op} ${rhs.str()})`);
@@ -210,9 +210,9 @@ const evalCompareOp = (
   rhs: BoObject,
   env: Memory
 ): BoObject => {
-  //console.log(`evalCompareOp(${op},${elhs.str()},${erhs.str()})`);
-  const [elhs, erhs] = [evalNode(lhs, env), evalNode(rhs, env)];
-  const cmp = elhs.compare(erhs);
+  //console.log(`evalCompareOp(${op},${eLhs.str()},${eRhs.str()})`);
+  const [eLhs, eRhs] = [evalNode(lhs, env), evalNode(rhs, env)];
+  const cmp = eLhs.compare(eRhs);
   const t = new Num(1);
   if (op === '==') return cmp === 0 ? t : NIL;
   if (op === '!=') return cmp !== 0 ? t : NIL;
