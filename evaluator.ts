@@ -22,17 +22,24 @@ import { parse } from './parser';
 import { tokenize } from './tokenizer';
 
 export class Evaluator {
+  static print = (msg: string) => {
+    console.log('foo', msg);
+  };
   rootEnvironmentSlot: Memory;
   rootObjectSlot: Memory;
-  constructor() {
+  constructor(print = (msg: string) => console.log(msg)) {
     this.rootEnvironmentSlot = new Memory();
     this.rootObjectSlot = new Memory();
+    Evaluator.print = print;
+
+    // variables
     this.rootEnvironmentSlot.define(
       'Object',
       new UserObject(this.rootObjectSlot)
     );
     this.rootEnvironmentSlot.define('nil', NIL);
 
+    // functions
     this.rootEnvironmentSlot.define('fun', FUN);
     this.rootEnvironmentSlot.define('macro', MACRO);
     this.rootEnvironmentSlot.define('evalNode', EVAL_NODE);

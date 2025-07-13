@@ -1,8 +1,10 @@
+import assert from 'assert';
 import { Evaluator } from './evaluator';
 import { Memory } from './memory';
 import { Num } from './object';
 import { parse } from './parser';
 import { tokenize } from './tokenizer';
+import { LogPrinter } from './printer';
 
 const tokenizerTest = () => {
   const tests: [string, string][] = [
@@ -12,7 +14,7 @@ const tokenizerTest = () => {
     [`"abc "${'\n'}"def"`, 'abc |;|def'],
     [';;abc;def;;zzz;;', 'abc|;|def|;|zzz'],
     [
-      ';;;abc.f(;c;,;;a;;b;;)  ;;;;;  def(;;"a b c";;) ; ; xxx; zzz ;;  ;',
+      ';;;abc.f(;c;,;;a;;b;;)  ;;;;;  def(;;"a b c";) ; ; xxx; zzz ;;  ;',
       'abc|.|f|(|c|,|a|;|b|)|;|def|(|a b c|)|;|xxx|;|zzz',
     ],
   ];
@@ -24,14 +26,12 @@ const tokenizerTest = () => {
         return e.value;
       })
       .join('|');
-    if (result_str !== mustBe) {
-      console.log(
-        `TOKENIZER ERROR code=${code} result=${result_str} mustBe=${mustBe}`
-      );
-      return;
-    }
+    assert.strictEqual(
+      result_str,
+      mustBe,
+      `TOKENIZER ERROR code=${code} result=${result_str} mustBe=${mustBe}`
+    );
   }
-
   console.log('[TOKENIZER] All tests are OK.');
 };
 
@@ -60,17 +60,14 @@ const parserTest = () => {
   ];
   for (const test of tests) {
     const [code, mustBe] = test;
-    //console.log('>>>>>' + code);
     const tokens = tokenize(code);
     const exp = parse(tokens);
     const result_str = exp.str();
-    if (result_str !== mustBe) {
-      console.log('PARSE ERROR');
-      console.log('code  =' + code);
-      console.log('result=' + result_str);
-      console.log('mustBe=' + mustBe);
-      return;
-    }
+    assert.strictEqual(
+      result_str,
+      mustBe,
+      `PARSE ERROR code=${code} result=${result_str} mustBe=${mustBe}`
+    );
   }
   console.log('[PARSER] All tests are OK.');
 };
@@ -82,19 +79,13 @@ const slotTest = () => {
   env.define('two', new Num(2));
   sub.define('three', new Num(3));
   sub.define('four', new Num(4));
-  if (env.define('one', new Num(-1)) !== null) {
-    throw 'A';
-  }
-  if (sub.define('one', new Num(-1)) === null) {
-    throw 'B';
-  }
-  if (sub.get('one') === null) {
-    console.log(sub.get('one'));
-    throw 'C';
-  }
-  if (sub.update('one', new Num(1)) && env.get('one')!.str() !== '1') {
-    throw 'D';
-  }
+  assert.strictEqual(env.define('one', new Num(-1)), null, 'A');
+  assert.notStrictEqual(sub.define('one', new Num(-1)), null, 'B');
+  assert.notStrictEqual(sub.get('one'), null, 'C');
+  assert.ok(
+    sub.update('one', new Num(1)) && env.get('one')!.str() === '1',
+    'D'
+  );
   console.log('[MEMORY] All tests are ok.');
 };
 
@@ -122,9 +113,9 @@ const evaluatorTest = () => {
     ['1 || nil', '1'],
     ['nil || 1', '1'],
     ['1 || 1', '1'],
-    ['(1+2).print()', '3'], // print "3"
+    ['(1+2).print()', '3', '3'], // print "3"
     ['fun((1+2).print())', 'fun(1.+(2).print())'],
-    ['f:=fun((1+2).print());f()', '3'], // print "3"
+    ['f:=fun((1+2).print());f()', '3', '3'], // print "3"
     ['fun(a,b,(a+b).print())', 'fun(a,b,a.+(b).print())'],
     ['add:=fun(a,b,a+b);add(6/3,2)', '4'],
     ['2>1', '1'],
@@ -175,16 +166,22 @@ const evaluatorTest = () => {
     ['v:=0;z:=fun(v<5).doWhile(v.print();v=v+1)', '5'], // print 0,1,2,3,4
   ];
 
-  const e = new Evaluator();
-  for (let [code, mustBe] of tests) {
-    //console.log(`>>>>>>>` + code);
+  const logPrinter = new LogPrinter();
+  const e = new Evaluator(logPrinter.getPrintFunction());
+  for (let [code, mustBe, printMustBe] of tests) {
+    // console.log({ code, mustBe, printLog });
     const result = e.eval(code).str();
-    if (result !== mustBe) {
-      console.log('[Code]' + code);
-      console.log('[Result]' + result);
-      console.log('[MustBe]' + mustBe);
-      console.log('evaluator test error');
-      return;
+    assert.strictEqual(
+      result,
+      mustBe,
+      `[Code]${code} [Result]${result} [MustBe]${mustBe}`
+    );
+    if (printMustBe) {
+      assert.strictEqual(
+        logPrinter.getLastLogs(),
+        printMustBe,
+        `[PrintLog]${logPrinter.getLastLogs()} [MustBe]"${printMustBe}"`
+      );
     }
   }
   console.log('[EVALUATOR] all tests are ok.');

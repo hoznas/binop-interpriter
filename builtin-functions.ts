@@ -1,4 +1,4 @@
-import { evalFunCall, evalNode, evalStr } from './evaluator';
+import { evalFunCall, evalNode, evalStr, Evaluator } from './evaluator';
 import { Memory } from './memory';
 import { BoObject, Fun, Macro, Message, NIL, Str } from './object';
 
@@ -127,7 +127,7 @@ const evalPrint = (mes: Message, env: Memory): BoObject => {
   if (mes.args?.length !== 0)
     throw new Error('ERROR evalPrint(arg length error)');
   const result = evalNode(mes.receiver, env);
-  console.log(result.str());
+  Evaluator.print(result.str());
   return result;
 };
 
@@ -156,7 +156,6 @@ const evalDoWhile = (mes: Message, env: Memory): BoObject => {
   }
   return result;
 };
-
 export const defaultMethodMap: {
   [key: string]: (mes: Message, env: Memory) => BoObject;
 } = {
