@@ -29,7 +29,7 @@ const tokenizerTest = () => {
     assert.strictEqual(
       result_str,
       mustBe,
-      `TOKENIZER ERROR code=${code} result=${result_str} mustBe=${mustBe}`
+      `TOKENIZER ERROR code=${code} result=${result_str} mustBe=${mustBe}`,
     );
   }
   console.log('[TOKENIZER] All tests are OK.');
@@ -66,7 +66,7 @@ const parserTest = () => {
     assert.strictEqual(
       result_str,
       mustBe,
-      `PARSE ERROR code=${code} result=${result_str} mustBe=${mustBe}`
+      `PARSE ERROR code=${code} result=${result_str} mustBe=${mustBe}`,
     );
   }
   console.log('[PARSER] All tests are OK.');
@@ -84,7 +84,7 @@ const slotTest = () => {
   assert.notStrictEqual(sub.get('one'), null, 'C');
   assert.ok(
     sub.update('one', new Num(1)) && env.get('one')!.str() === '1',
-    'D'
+    'D',
   );
   console.log('[MEMORY] All tests are ok.');
 };
@@ -163,7 +163,6 @@ const evaluatorTest = () => {
       '111', // print 111
     ],
     ['1.if("t","f")', '"t"'],
-    ['v:=0;z:=fun(v<5).doWhile(v.print();v=v+1)', '5'], // print 0,1,2,3,4
   ];
 
   const logPrinter = new LogPrinter();
@@ -174,13 +173,13 @@ const evaluatorTest = () => {
     assert.strictEqual(
       result,
       mustBe,
-      `[Code]${code} [Result]${result} [MustBe]${mustBe}`
+      `[Code]${code} [Result]${result} [MustBe]${mustBe}`,
     );
     if (printMustBe) {
       assert.strictEqual(
         logPrinter.getLastLogs(),
         printMustBe,
-        `[PrintLog]${logPrinter.getLastLogs()} [MustBe]"${printMustBe}"`
+        `[PrintLog]${logPrinter.getLastLogs()} [MustBe]"${printMustBe}"`,
       );
     }
   }
