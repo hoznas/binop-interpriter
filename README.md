@@ -1,26 +1,44 @@
-# binop-interpriter
-## 特徴
-サンプルコードsample.boに書いてあります。
-- https://github.com/hoznas/binop-interpriter/blob/main/sample.bo
+# binop
 
+BinOp 言語の複数実装を収録したリポジトリ。
 
-## 実行
-### サンプルの実行
-```tsc && node main sample.bo```
+サンプルコードは [sample.bo](sample.bo)、文法規則は [bo.bnf](bo.bnf) を参照。
 
-### テストの実行
-```tsc && node tests```
+## 構成
 
+| フォルダ                           | 説明                                 |
+| ---------------------------------- | ------------------------------------ |
+| [ts-interpreter/](ts-interpreter/) | TypeScript によるインタプリタ実装    |
+| [go-interpreter/](go-interpreter/) | Go によるインタプリタ実装            |
+| [go-compiler-vm/](go-compiler-vm/) | Go によるコンパイラ + スタックVM実装 |
 
-## ファイル構成
-|ファイル名|概要|
-|---------|------------------|
-|main.ts|BinOp言語のメイン処理が書いてある。実行時に引数(実行したいファイル名)をとる|
-|tokenizer.ts|プログラムコードを意味のある単位（トークン）に分解|
-|parser.ts|トークンの列を文法上意味のある構造（AST）に変換|
-|evaluator.ts|parserで渡されたASTを評価|
-|object.ts|各種オブジェクトの定義はここにあります|
-|builtin-functions.ts|組み込み関数の定義|
-|tests.ts|テストを実行する|
-|sample.bo|サンプルプログラム|
-|bo.bnf|文法規則。作成中。プログラムで使用していない|
+## 各実装の実行方法
+
+### ts-interpreter
+
+```bash
+cd ts-interpreter
+tsc && node main sample.bo   # サンプル実行
+tsc && node tests            # テスト実行
+```
+
+### go-interpreter
+
+```bash
+cd go-interpreter
+go run . ../sample.bo        # サンプル実行
+go test ./...                # テスト実行
+```
+
+### go-compiler-vm
+
+詳細は [go-compiler-vm/README.md](go-compiler-vm/README.md) を参照。
+
+```bash
+cd go-compiler-vm
+# ビルド
+(cd go-compiler && go build -o binop-compiler .)
+(cd go-vm && go build -o binop-vm .)
+# 実行
+go-compiler/binop-compiler ../sample.bo | go-vm/binop-vm
+```
