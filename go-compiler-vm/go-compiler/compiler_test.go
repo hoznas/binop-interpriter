@@ -222,21 +222,13 @@ func TestCompileFun(t *testing.T) {
 }
 
 func TestCompileMacro(t *testing.T) {
-	tests := []struct {
-		code   string
-		mustBe string
-	}{
-		{
-			"macro(x, x)",
-			"MAKE_MACRO 1 x\nLOAD x\nEND_MACRO",
-		},
-	}
-	for _, tt := range tests {
-		result := instrToLines(CompileToInstructions(tt.code))
-		if result != tt.mustBe {
-			t.Errorf("[Code] %s\n[Result]\n%s\n[MustBe]\n%s", tt.code, result, tt.mustBe)
+	// macro は go-compiler-vm では未サポートのため、コンパイル時にパニックになることを確認する
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("macro should panic in go-compiler-vm, but did not")
 		}
-	}
+	}()
+	CompileToInstructions("macro(x, x)")
 }
 
 func TestCompileMethodCall(t *testing.T) {

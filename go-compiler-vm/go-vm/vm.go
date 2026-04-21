@@ -205,16 +205,7 @@ func (vm *VM) executeFrame(instructions []Instruction, env *Memory) BoObject {
 			continue
 
 		case OP_MAKE_MACRO:
-			nParams, _ := strconv.Atoi(inst.Operands[0])
-			params := inst.Operands[1 : 1+nParams]
-			body, endPC := extractBody(instructions, pc, OP_MAKE_MACRO, OP_END_MACRO)
-			push(&Macro{
-				Params:     params,
-				Body:       body,
-				CreatedEnv: env,
-			})
-			pc = endPC + 1
-			continue
+			panic("ERROR VM: macro is not supported in go-compiler-vm. Use ts-interpreter or go-interpreter instead.")
 
 		case OP_END_FUN, OP_END_MACRO:
 			// extractBody でスキップされるので通常ここには来ない
@@ -319,7 +310,7 @@ func (vm *VM) callFunction(this *UserObject, f BoObject, args []BoObject) BoObje
 	case *Fun:
 		return vm.callFun(this, fn, args)
 	case *Macro:
-		return vm.callMacro(this, fn, args)
+		panic("ERROR VM: macro is not supported in go-compiler-vm. Use ts-interpreter or go-interpreter instead.")
 	case *BuiltinFunction:
 		var recv BoObject
 		if this != nil {
@@ -344,21 +335,6 @@ func (vm *VM) callFun(this *UserObject, fn *Fun, args []BoObject) BoObject {
 		closure.DefineForce("this", this)
 	}
 	return vm.executeFrame(fn.Body, closure)
-}
-
-// callMacro はマクロを呼び出す（VMでは関数と同じ動作）。
-func (vm *VM) callMacro(this *UserObject, mc *Macro, args []BoObject) BoObject {
-	if len(mc.Params) != len(args) {
-		panic(fmt.Sprintf("ERROR VM callMacro: expected %d args, got %d", len(mc.Params), len(args)))
-	}
-	closure := mc.CreatedEnv.SubMemory()
-	for i, param := range mc.Params {
-		closure.DefineForce(param, args[i])
-	}
-	if this != nil {
-		closure.DefineForce("this", this)
-	}
-	return vm.executeFrame(mc.Body, closure)
 }
 
 // evalArithmetic は二項算術演算を評価する。

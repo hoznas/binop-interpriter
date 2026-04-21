@@ -98,10 +98,9 @@ func compileMessage(mes *Message, state *CompilerState) {
 		return
 	}
 
-	// --- 特殊形式: macro(args..., body) ---
-	if mes.SlotName == "macro" && mes.Receiver == nil && mes.HasArgs && len(mes.Args) >= 1 {
-		compileMacro(mes, state)
-		return
+	// --- 特殊形式: macro は go-compiler-vm では未サポート ---
+	if mes.SlotName == "macro" && mes.Receiver == nil {
+		panic("ERROR: macro is not supported in go-compiler-vm. Use ts-interpreter or go-interpreter instead.")
 	}
 
 	// --- receiverありのメッセージ ---

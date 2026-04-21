@@ -3,6 +3,7 @@
 BinOp 言語の複数実装を収録したリポジトリ。
 
 サンプルコードは [sample.bo](sample.bo)、文法規則は [bo.bnf](bo.bnf) を参照。
+言語仕様の概要は [LANGUAGE.md](LANGUAGE.md) を参照。
 
 ## 構成
 
