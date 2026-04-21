@@ -1,0 +1,25 @@
+{
+  "name": "binop-interpriter",
+  "version": "1.0.0",
+  "description": "サンプルコードsample.boに書いてあります。 - https://github.com/hoznas/binop-interpriter/blob/main/sample.bo",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hoznas/binop-interpriter.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/hoznas/binop-interpriter/issues"
+  },
+  "homepage": "https://github.com/hoznas/binop-interpriter#readme",
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^6.0.2"
+  }
+}
