@@ -4,7 +4,9 @@
   "description": "サンプルコードsample.boに書いてあります。 - https://github.com/hoznas/binop-interpriter/blob/main/sample.bo",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "esbuild ./web-adapter.ts --bundle --outfile=./dist/binop.js --format=iife --global-name=BinOp --minify --sourcemap",
+    "build:tests": "esbuild ./tests.ts --bundle --platform=node --outfile=./dist/tests.js --target=node20",
+    "test": "npm run build:tests && node ./dist/tests.js"
   },
   "repository": {
     "type": "git",
@@ -21,5 +23,7 @@
   "devDependencies": {
     "@types/node": "^25.5.0",
     "typescript": "^6.0.2"
+  ,
+    "esbuild": "^0.18.0"
   }
 }

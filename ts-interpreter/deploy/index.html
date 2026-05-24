@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BinOp Playground</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- CodeMirror v5 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/theme/one-dark.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/addon/mode/simple.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+  <style>
+    html,body,#app{height:100%;}
+    .CodeMirror{height:100%;}
+  </style>
+</head>
+<body class="bg-gray-50 h-full">
+  <div id="app" class="h-screen flex flex-col">
+    <header class="flex items-center gap-4 p-4 bg-white shadow">
+      <h1 class="text-xl font-semibold">BinOp Playground</h1>
+      <div class="flex-1"></div>
+      <button id="btnClear" class="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200">Clear</button>
+      <button id="btnCopyUrl" class="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200">URLをコピー</button>
+      <button id="btnEval" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Eval ▶</button>
+    </header>
+
+    <main class="flex-1 flex flex-col md:flex-row">
+      <!-- editor -->
+      <section class="md:w-1/2 h-1/2 md:h-full p-2">
+        <textarea id="code" class="w-full h-full" placeholder="code"></textarea>
+      </section>
+
+      <!-- output -->
+      <section class="md:w-1/2 h-1/2 md:h-full p-2">
+        <div id="output" class="h-full bg-slate-900 text-slate-100 font-mono p-3 overflow-auto rounded"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- binop runtime (built file) -->
+  <script src="./binop.js"></script>
+
+  <script>
+    // Define a simple CodeMirror mode for the custom language
+    (function() {
+      const CodeMirror = (window as any).CodeMirror;
+      CodeMirror.defineSimpleMode('binop', {
+        start: [
+          {regex: /"(?:[^\\"]|\\.)*"/, token: 'string'},
+          {regex: /[0-9]+(?:\.[0-9]+)?/, token: 'number'},
+          {regex: /[()]/, token: 'bracket'},
+          {regex: /[,.]/, token: 'punctuation'},
+          {regex: /;;+|;|\S+/, token: 'variable'},
+        ],
+        meta: {lineComment: ';;'}
+      });
+    })();
+
+    document.addEventListener('DOMContentLoaded', async function(){
+      // Create CodeMirror editor from textarea
+      const textarea = document.getElementById('code');
+      // @ts-ignore
+      const editor = CodeMirror.fromTextArea(textarea, {
+        lineNumbers: true,
+        mode: 'binop',
+        theme: 'one-dark',
+        tabSize: 2,
+      });
+
+      const outputEl = document.getElementById('output');
+      const btnEval = document.getElementById('btnEval');
+      const btnClear = document.getElementById('btnClear');
+      const btnCopyUrl = document.getElementById('btnCopyUrl');
+
+      function appendOutput(text, cls) {
+        const el = document.createElement('div');
+        if (cls) el.className = cls;
+        el.textContent = text;
+        outputEl.appendChild(el);
+        outputEl.scrollTop = outputEl.scrollHeight;
+      }
+
+      function setOutput(text) {
+        outputEl.innerHTML = '';
+        appendOutput(text);
+      }
+
+      // Load code from URL param if present
+      const params = new URLSearchParams(location.search);
+      if (params.has('code')) {
+        try {
+          const dec = LZString.decompressFromEncodedURIComponent(params.get('code'));
+          if (dec !== null) editor.setValue(dec);
+        } catch (e) {
+          console.error('decompress error', e);
+        }
+      } else {
+        // Fetch sample.bo by default if available
+        try {
+          const resp = await fetch('./sample.bo');
+          if (resp.ok) {
+            const txt = await resp.text();
+            editor.setValue(txt);
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      btnEval.addEventListener('click', function(){
+        const code = editor.getValue();
+        setOutput('Running...');
+        try {
+          const res = (window as any).BinOp.evalCode(code);
+          const lines = [];
+          if (res.logs && res.logs.length) {
+            res.logs.forEach(l => lines.push('[print] ' + l));
+          }
+          if (res.error) {
+            lines.push('[error] ' + res.error);
+          } else {
+            lines.push('[result] ' + res.result);
+          }
+          outputEl.innerHTML = '';
+          lines.forEach(l => appendOutput(l));
+        } catch (e) {
+          setOutput('[fatal] ' + e);
+        }
+      });
+
+      btnClear.addEventListener('click', function(){
+        editor.setValue('');
+        outputEl.innerHTML = '';
+      });
+
+      btnCopyUrl.addEventListener('click', async function(){
+        const code = editor.getValue();
+        try {
+          const compressed = LZString.compressToEncodedURIComponent(code);
+          const share = location.origin + location.pathname + '?code=' + compressed;
+          await navigator.clipboard.writeText(share);
+          appendOutput('URL copied to clipboard');
+        } catch (e) {
+          appendOutput('Failed to copy URL: ' + e);
+        }
+      });
+
+    });
+  </script>
+</body>
+</html>
