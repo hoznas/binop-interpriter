@@ -33,11 +33,17 @@ jobs:
 
       - run: npm run build
 
+      - name: デプロイ用ファイルを staging/ に集約
+        run: |
+          mkdir staging
+          cp index.html staging/
+          cp -r dist staging/
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: staging
 
       - id: deploy
         uses: actions/deploy-pages@v4

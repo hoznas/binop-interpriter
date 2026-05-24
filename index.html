@@ -45,12 +45,12 @@
     // BinOp シンタックスハイライト
     CodeMirror.defineSimpleMode('binop', {
       start: [
-        { regex: /"[^"]*"/,                                                                         token: 'string' },
-        { regex: /\d+/,                                                                             token: 'number' },
-        { regex: /\b(?:if|fun|nil|clone|print|printEnter|type|evalNode|evalStr|doWhile|message)\b/, token: 'keyword' },
-        { regex: /[()]/,                                                                            token: 'bracket' },
-        { regex: /[,.]/,                                                                            token: 'punctuation' },
-        { regex: /:=|==|!=|<=|>=|&&|\|\||[+\-*\/%<>=;]/,                                           token: 'operator' },
+        { regex: /"[^"]*"/,                                                    token: 'string' },
+        { regex: /\d+/,                                                        token: 'number' },
+        { regex: /\b(?:fun|macro|message|evalNode|evalStr|nil|if|print|clone)\b/, token: 'keyword' },
+        { regex: /[()]/,                                                       token: 'bracket' },
+        { regex: /,/,                                                          token: 'punctuation' },
+        { regex: /:=|==|!=|<=|>=|&&|\|\||[+\-*\/%<>=;.]/,                     token: 'operator' },
       ],
     });
 
