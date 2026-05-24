@@ -24,6 +24,8 @@
     <h1 class="text-lg font-bold">BinOp Playground</h1>
     <div class="ml-auto flex gap-2">
       <button id="btn-sample" class="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-sm transition-colors">チュートリアル</button>
+      <button id="btn-undo"   class="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-sm transition-colors">← Undo</button>
+      <button id="btn-redo"   class="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-sm transition-colors">Redo →</button>
       <button id="btn-clear" class="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-sm transition-colors">Clear</button>
       <button id="btn-share" class="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-sm transition-colors">URLをコピー</button>
       <button id="btn-eval"  class="px-4 py-1 rounded bg-blue-600 hover:bg-blue-500 text-sm font-semibold transition-colors">Eval ▶</button>
@@ -74,9 +76,19 @@
         output.textContent = 'Error: BinOp interpreter not loaded (npm run build を実行してください)';
         return;
       }
+      const compressed = LZString.compressToEncodedURIComponent(cm.getValue());
+      history.pushState(null, '', location.pathname + '?code=' + compressed);
       const { logs, error } = window.BinOp.evalCode(cm.getValue());
       output.textContent = error ? 'Error: ' + error : (logs.join('\n') || '(no output)');
     });
+
+    window.addEventListener('popstate', () => {
+      const encoded = new URLSearchParams(location.search).get('code');
+      cm.setValue(encoded ? (LZString.decompressFromEncodedURIComponent(encoded) ?? '') : '');
+    });
+
+    document.getElementById('btn-undo').addEventListener('click', () => history.back());
+    document.getElementById('btn-redo').addEventListener('click', () => history.forward());
 
     document.getElementById('btn-sample').addEventListener('click', () => {
       fetch('tutorial.bo')
