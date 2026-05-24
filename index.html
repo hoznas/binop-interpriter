@@ -20,26 +20,33 @@
 </head>
 <body class="flex flex-col h-screen overflow-hidden bg-gray-900 text-gray-100">
 
-  <header class="flex items-center gap-2 px-4 py-2 bg-gray-800 border-b border-gray-700 shrink-0">
+  <header class="flex items-center px-4 py-2 bg-gray-800 border-b border-gray-700 shrink-0">
     <h1 class="text-lg font-bold">BinOp Playground</h1>
-    <div class="ml-auto flex gap-2">
-      <button id="btn-sample" class="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-sm transition-colors">チュートリアル</button>
-      <button id="btn-undo"   class="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-sm transition-colors">← Undo</button>
-      <button id="btn-redo"   class="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-sm transition-colors">Redo →</button>
-      <button id="btn-clear" class="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-sm transition-colors">Clear</button>
-      <button id="btn-share" class="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-sm transition-colors">URLをコピー</button>
-      <button id="btn-eval"  class="px-4 py-1 rounded bg-blue-600 hover:bg-blue-500 text-sm font-semibold transition-colors">Eval ▶</button>
+    <div class="ml-auto">
+      <button id="btn-sample" class="w-7 h-7 rounded bg-gray-700 hover:bg-gray-600 text-sm transition-colors" title="チュートリアルを表示">?</button>
     </div>
   </header>
 
   <main class="flex flex-col md:flex-row flex-1 min-h-0">
-    <!-- エディタ -->
-    <div class="flex-1 min-h-0 relative border-b md:border-b-0 md:border-r border-gray-700">
-      <div class="absolute inset-0">
-        <textarea id="editor"></textarea>
+    <!-- 左ペイン: エディタ + ボタン -->
+    <div class="flex flex-col flex-1 min-h-0 border-b md:border-b-0 md:border-r border-gray-700">
+      <!-- 上: ソースコード -->
+      <div class="flex-1 min-h-0 relative">
+        <div class="absolute inset-0">
+          <textarea id="editor"></textarea>
+        </div>
+      </div>
+      <!-- 下: ボタンリスト -->
+      <div class="shrink-0 flex flex-wrap items-center gap-2 px-4 py-2 bg-gray-800 border-t border-gray-700">
+        <button id="btn-undo"   class="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-sm transition-colors">Undo</button>
+        <button id="btn-redo"   class="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-sm transition-colors">Redo</button>
+        <button id="btn-clear"  class="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-sm transition-colors">Clear</button>
+        <span class="w-px h-5 bg-gray-600"></span>
+        <button id="btn-share"  class="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-sm transition-colors" title="ソースコードをURLに埋め込んでコピー">Share</button>
+        <button id="btn-eval"   class="px-4 py-1 rounded bg-blue-600 hover:bg-blue-500 text-sm font-semibold transition-colors">Eval ▶</button>
       </div>
     </div>
-    <!-- 出力 -->
+    <!-- 右ペイン: 実行結果 -->
     <div id="output" class="flex-1 min-h-0 overflow-auto bg-gray-950 font-mono text-sm p-4 text-green-400 whitespace-pre-wrap"></div>
   </main>
 
@@ -94,11 +101,10 @@
       fetch('tutorial.bo')
         .then(r => r.text())
         .then(text => {
-          cm.setValue(text);
-          document.getElementById('output').textContent = '';
+          document.getElementById('output').textContent = text;
         })
         .catch(() => {
-          document.getElementById('output').textContent = 'Error: sample.bo を読み込めませんでした';
+          document.getElementById('output').textContent = 'Error: tutorial.bo を読み込めませんでした';
         });
     });
 
@@ -112,8 +118,8 @@
       const url = location.origin + location.pathname + '?code='
                 + LZString.compressToEncodedURIComponent(cm.getValue());
       navigator.clipboard.writeText(url).then(() => {
-        btn.textContent = 'コピーしました!';
-        setTimeout(() => { btn.textContent = 'URLをコピー'; }, 2000);
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Share'; }, 2000);
       });
     });
   </script>
