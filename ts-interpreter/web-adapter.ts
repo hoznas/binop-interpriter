@@ -1,14 +1,11 @@
 import { Evaluator } from './evaluator';
 
-// Capture printed messages so the web UI can display them
-const printLogs: string[] = [];
-const evaluator = new Evaluator((msg: string) => {
-  printLogs.push(String(msg));
-});
-
 // Evaluate code and return result, logs and error (if any)
 export function evalCode(code: string) {
-  printLogs.length = 0;
+  const printLogs: string[] = [];
+  const evaluator = new Evaluator((msg: string) => {
+    printLogs.push(String(msg));
+  });
   try {
     const result = evaluator.eval(code);
     return { result: result.str(), logs: printLogs.slice(), error: null };
