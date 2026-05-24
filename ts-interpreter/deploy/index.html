@@ -111,6 +111,8 @@
 
       btnEval.addEventListener('click', function(){
         const code = editor.getValue();
+        const compressed = LZString.compressToEncodedURIComponent(code);
+        history.pushState(null, '', location.pathname + '?code=' + compressed);
         setOutput('Running...');
         try {
           const res = (window as any).BinOp.evalCode(code);
