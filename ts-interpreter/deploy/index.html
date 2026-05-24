@@ -21,6 +21,8 @@
     <header class="flex items-center gap-4 p-4 bg-white shadow">
       <h1 class="text-xl font-semibold">BinOp Playground</h1>
       <div class="flex-1"></div>
+      <button id="btnUndo" class="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200">← Undo</button>
+      <button id="btnRedo" class="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200">Redo →</button>
       <button id="btnClear" class="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200">Clear</button>
       <button id="btnCopyUrl" class="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200">URLをコピー</button>
       <button id="btnEval" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Eval ▶</button>
@@ -73,6 +75,8 @@
       const btnEval = document.getElementById('btnEval');
       const btnClear = document.getElementById('btnClear');
       const btnCopyUrl = document.getElementById('btnCopyUrl');
+      const btnUndo = document.getElementById('btnUndo');
+      const btnRedo = document.getElementById('btnRedo');
 
       function appendOutput(text, cls) {
         const el = document.createElement('div');
@@ -131,6 +135,21 @@
           setOutput('[fatal] ' + e);
         }
       });
+
+      window.addEventListener('popstate', function() {
+        const params = new URLSearchParams(location.search);
+        if (params.has('code')) {
+          try {
+            const dec = LZString.decompressFromEncodedURIComponent(params.get('code'));
+            if (dec !== null) editor.setValue(dec);
+          } catch (e) { /* ignore */ }
+        } else {
+          editor.setValue('');
+        }
+      });
+
+      btnUndo.addEventListener('click', () => history.back());
+      btnRedo.addEventListener('click', () => history.forward());
 
       btnClear.addEventListener('click', function(){
         editor.setValue('');
