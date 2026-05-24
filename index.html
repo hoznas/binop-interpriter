@@ -23,6 +23,7 @@
   <header class="flex items-center gap-2 px-4 py-2 bg-gray-800 border-b border-gray-700 shrink-0">
     <h1 class="text-lg font-bold">BinOp Playground</h1>
     <div class="ml-auto flex gap-2">
+      <button id="btn-sample" class="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-sm transition-colors">サンプル</button>
       <button id="btn-clear" class="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-sm transition-colors">Clear</button>
       <button id="btn-share" class="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-sm transition-colors">URLをコピー</button>
       <button id="btn-eval"  class="px-4 py-1 rounded bg-blue-600 hover:bg-blue-500 text-sm font-semibold transition-colors">Eval ▶</button>
@@ -54,15 +55,7 @@
       ],
     });
 
-    const SAMPLE = [
-      '"Hello, BinOp!".print()',
-      '',
-      'fun(n,',
-      '  (n == 0) && 1 || (n * (n - 1 factorial))',
-      ') := factorial',
-      '',
-      '5 factorial .print()',
-    ].join('\n');
+    const HELLO = '"Hello, BinOp!".print()';
 
     const cm = CodeMirror.fromTextArea(document.getElementById('editor'), {
       mode: 'binop',
@@ -71,9 +64,9 @@
       lineWrapping: true,
     });
 
-    // URL からコード復元、なければサンプル表示
+    // URL からコード復元、なければ Hello 表示
     const encoded = new URLSearchParams(location.search).get('code');
-    cm.setValue(encoded ? (LZString.decompressFromEncodedURIComponent(encoded) ?? SAMPLE) : SAMPLE);
+    cm.setValue(encoded ? (LZString.decompressFromEncodedURIComponent(encoded) ?? HELLO) : HELLO);
 
     document.getElementById('btn-eval').addEventListener('click', () => {
       const output = document.getElementById('output');
@@ -83,6 +76,18 @@
       }
       const { logs, error } = window.BinOp.evalCode(cm.getValue());
       output.textContent = error ? 'Error: ' + error : (logs.join('\n') || '(no output)');
+    });
+
+    document.getElementById('btn-sample').addEventListener('click', () => {
+      fetch('sample.bo')
+        .then(r => r.text())
+        .then(text => {
+          cm.setValue(text);
+          document.getElementById('output').textContent = '';
+        })
+        .catch(() => {
+          document.getElementById('output').textContent = 'Error: sample.bo を読み込めませんでした';
+        });
     });
 
     document.getElementById('btn-clear').addEventListener('click', () => {
