@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "esbuild ts-interpreter/web-adapter.ts --bundle --outfile=dist/bundle.js --platform=browser",
+    "test": "esbuild ts-interpreter/tests.ts --bundle --platform=node --outfile=dist/tests.js && node dist/tests.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}
