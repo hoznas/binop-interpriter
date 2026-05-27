@@ -72,7 +72,19 @@
       ],
     });
 
-    const HELLO = '"Hello, BinOp!".print()';
+    const INITIAL_CODE = `"┌─────────────────────────────┐"
+"│          使い方              │"
+"└─────────────────────────────┘"
+"Eval ▶  : エディタのコードを実行し、結果を右ペインに表示します"
+"Share   : コードをURLに埋め込んでコピーします。URLを送ると相手も同じコードを開けます"
+"Help    : チュートリアルを右ペインに表示します"
+"Undo    : 直前のEvalを実行する前のコードに戻します"
+"Clear   : エディタと出力をクリアします";
+
+"┌─────────────────────────────┐"
+"│       サンプルコード          │"
+"└─────────────────────────────┘"
+"Hello, BinOp!".print()`;
 
     const cm = CodeMirror.fromTextArea(document.getElementById('editor'), {
       mode: 'binop',
@@ -83,7 +95,7 @@
 
     // URL からコード復元、なければ Hello 表示
     const encoded = new URLSearchParams(location.search).get('code');
-    cm.setValue(encoded ? (LZString.decompressFromEncodedURIComponent(encoded) ?? HELLO) : HELLO);
+    cm.setValue(encoded ? (LZString.decompressFromEncodedURIComponent(encoded) ?? INITIAL_CODE) : INITIAL_CODE);
 
     document.getElementById('btn-eval').addEventListener('click', () => {
       const output = document.getElementById('output');
