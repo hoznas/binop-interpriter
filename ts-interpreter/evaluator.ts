@@ -121,7 +121,7 @@ export const evalNodeK = (
     if (['==', '!=', '<', '<=', '>', '>='].includes(op)) {
       return evalCompareOpK(lhs, op, rhs, env, k);
     }
-    if (['=', ':=', '.', ';', ',', '&&', '||'].includes(op)) {
+    if (['=', ':=', ';', ',', '&&', '||'].includes(op)) {
       return evalSpecialOpK(lhs, op, rhs, env, k);
     }
   }
