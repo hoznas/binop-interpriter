@@ -327,6 +327,37 @@ describe('Evaluator', () => {
       );
       assert.strictEqual(logPrinter.getLastLogs(), '3');
     });
+
+    test('should capture sequential prints in order', () => {
+      const logPrinter = new LogPrinter();
+      const e = new Evaluator(logPrinter.getPrintFunction());
+      e.eval('"first".print();"second".print();"third".print()');
+      assert.deepStrictEqual(logPrinter.getLogs(), ['"first"', '"second"', '"third"']);
+    });
+
+    test('should capture prints in recursion', () => {
+      const logPrinter = new LogPrinter();
+      const e = new Evaluator(logPrinter.getPrintFunction());
+      e.eval('countdown:=fun(n,(n>0).if(n.print();countdown(n-1),nil))');
+      e.eval('countdown(3)');
+      assert.deepStrictEqual(logPrinter.getLogs(), ['3', '2', '1']);
+    });
+
+    test('should capture prints from closure counter', () => {
+      const logPrinter = new LogPrinter();
+      const e = new Evaluator(logPrinter.getPrintFunction());
+      e.eval('makeCounter:=fun(n:=0;fun(n=n+1));counter:=makeCounter()');
+      e.eval('counter().print();counter().print();counter().print()');
+      assert.deepStrictEqual(logPrinter.getLogs(), ['1', '2', '3']);
+    });
+
+    test('should capture print from object method', () => {
+      const logPrinter = new LogPrinter();
+      const e = new Evaluator(logPrinter.getPrintFunction());
+      e.eval('dog:=Object.clone();dog.name:="Rex";dog.bark:=fun("Woof! I am "+this.name)');
+      e.eval('dog.bark().print()');
+      assert.strictEqual(logPrinter.getLastLogs(), '"Woof! I am Rex"');
+    });
   });
 
   describe('Objects', () => {
