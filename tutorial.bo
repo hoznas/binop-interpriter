@@ -7,7 +7,11 @@
 
 "名前の由来: BINary OPerator（二項演算子）の略"
 
-"==== 基本構文 ===="
+"==== 1. 基本構文 ===="
+
+"== Hello World =="
+"まず最初に動作確認。print() はレシーバの値を表示し、レシーバをそのまま返します。"
+"Hello, World!".print(); "=> Hello, World!"
 
 "== コメント =="
 "BinOp にはコメント構文がありません。"
@@ -18,23 +22,23 @@
 "整数リテラルのみ存在します。小数・負数はその都度計算で作ります。"
 1
 123
-1/10; "=> 0.1"
-0-1; "=> -1"
+(1/10).print(); "=> 0.1"
+(0-1).print();  "=> -1"
 
 "== 文字列 =="
 "ダブルクォーテーションで囲みます。文字列中にダブルクォーテーションは使えません。"
 "Hello world!"
-"ab" + "cd"; "=> abcd （+ で連結）"
-"ab" + 12; "=> ab12 （数値は自動的に文字列に変換）"
+("ab" + "cd").print(); "=> abcd （+ で連結）"
+("ab" + 12).print();   "=> ab12 （数値は自動的に文字列に変換）"
 "/ と % は先頭から n 文字、n 文字目以降を返します。"
-"abcd" / 1; "=> a"
-"abcd" % 1; "=> bcd"
+("abcd" / 1).print(); "=> a"
+("abcd" % 1).print(); "=> bcd"
 
 "== 真偽値 =="
 "BinOp に真偽値の型はありません。nil だけが偽で、それ以外はすべて真です。"
 nil; "唯一の偽値"
 0; ""; "0 も空文字も真"
-1 > 0; "比較演算子は、真なら 1（非nil）、偽なら nil を返します"
+(1 > 0).print(); "=> 1 （比較演算子は、真なら 1（非nil）、偽なら nil を返します）"
 
 "== 変数 =="
 ":= で新規定義、= で再代入します。"
@@ -42,7 +46,7 @@ v := 1; "変数の宣言"
 v = v + 5; "再代入"
 v.print(); "=> 6"
 
-"==== 演算子 ===="
+"==== 2. 演算子 ===="
 
 "== 組み込み二項演算子 =="
 "以下の順に優先順位が高く、すべて左結合です。"
@@ -65,17 +69,9 @@ n.print(); "=> -3"
 "改行も同様に扱われます。"
 "first".print();"second".print(); "=> first, second の順に表示"
 
-"==== 制御構文 ===="
+"==== 3. 関数 ===="
 
-"== 条件分岐 =="
-"if はキーワードではなく、レシーバに送るメッセージです。"
-"レシーバが非nil なら第1引数、nil なら第2引数を評価して返します。"
-(n==7).if(
-  "seven",
-  "not seven"
-).print(); "=> not seven"
-
-"== 関数 =="
+"== 関数の定義と呼び出し =="
 "fun(引数1, 引数2, ..., 本体) で関数を作ります。"
 "最後の引数が本体になり、本体の最終評価値が戻り値です。"
 addPrint := fun(a,b,
@@ -84,6 +80,45 @@ addPrint := fun(a,b,
   "最後に評価した値が戻り値になる"
   result)
 addPrint(3,6); "=> 9"
+
+"== 引数なしの関数 =="
+"引数が不要な場合は fun(本体) と書き、() で呼び出します。"
+greet := fun("Hello!")
+greet().print(); "=> Hello!"
+
+"== スコープ =="
+":= は現在のスコープに変数を定義します。"
+"= は最も近い外側のスコープにある同名の変数を更新します。"
+"関数の本体は新しいスコープを作ります。"
+count := 0
+inc := fun(count = count + 1)
+inc()
+inc()
+count.print(); "=> 2 （外側の count が inc の呼び出しで更新された）"
+
+"== 高階関数 =="
+"関数は値として扱えます。引数に渡したり、戻り値にしたりできます。"
+apply := fun(f,x, f(x))
+double := fun(x, x*2)
+apply(double, 5).print(); "=> 10"
+
+"== クロージャ =="
+"関数は定義時の環境を閉じ込めます。"
+"makeCounter は呼ぶたびに独立したカウンタを返します。"
+makeCounter := fun(n:=0;fun(n=n+1))
+counter := makeCounter()
+counter().print(); "=> 1"
+counter().print(); "=> 2"
+
+"==== 4. 制御構文 ===="
+
+"== 条件分岐 =="
+"if はキーワードではなく、レシーバに送るメッセージです。"
+"レシーバが非nil なら第1引数、nil なら第2引数を評価して返します。"
+(n==7).if(
+  "seven",
+  "not seven"
+).print(); "=> not seven"
 
 "== 繰り返し処理 =="
 "ループ構文はありません。繰り返しは再帰で表現します。"
@@ -94,15 +129,7 @@ factorial := fun(n,
     1))
 factorial(4).print(); "=> 24 （4! = 24）"
 
-"== クロージャ =="
-"関数は定義時の環境を閉じ込めます。"
-"makeCounter は呼ぶたびに独立したカウンタを返します。"
-makeCounter := fun(n:=0;fun(n=n+1))
-counter := makeCounter()
-counter().print(); "=> 1"
-counter().print(); "=> 2"
-
-"==== オブジェクト指向 ===="
+"==== 5. オブジェクト指向 ===="
 
 "== オブジェクトの作成とクローン =="
 "BinOp はプロトタイプベースのOOPです。"
@@ -110,7 +137,6 @@ counter().print(); "=> 2"
 "スロットへの代入は = と := のどちらでも構いません。"
 Dog := fun(name,age,
   dogClass := Object.clone()
-  "objectのプロパティへの代入は=と:=のどちらを使っても構わない"
   dogClass.name = name
   dogClass.age := age
   dogClass.greet = fun("I'm " + this.name)
@@ -118,13 +144,28 @@ Dog := fun(name,age,
 
 dog1 := Dog("Foo", 10)
 dog2 := dog1.clone(); "直接オブジェクトをクローンしてもいい"
-dog2.name = "Bar";  "objectのslotへの代入はクローン元に影響しない"
+dog2.name = "Bar"; "objectのslotへの代入はクローン元に影響しない"
 dog2.age = 6
 dog3 := Dog("Baz", 1)
 
 dog1.greet().print(); "=> I'm Foo"
 dog2.greet().print(); "=> I'm Bar"
 dog3.greet().print(); "=> I'm Baz"
+
+"== this について =="
+"メソッド内の this は、そのメソッドを呼び出したオブジェクト（レシーバ）を指します。"
+"継承したメソッドを呼んでも、this は呼び出し元オブジェクトを指します。"
+point := Object.clone()
+point.x := 3
+point.y := 4
+point.dist = fun(
+  (this.x * this.x + this.y * this.y).print())
+point.dist(); "=> 25 （3^2 + 4^2）"
+
+point2 := point.clone()
+point2.x = 0
+point2.y = 5
+point2.dist(); "=> 25 （0^2 + 5^2）this は point2 を指す"
 
 "== 継承 =="
 "clone() によってスロットの探索チェーンが形成されます。"
@@ -143,24 +184,24 @@ o.setValue = fun(x,this.value = x)
 o setValue 123; "o.setValue(123) と同じ"
 o.value.print(); "=> 123"
 
-"==== 高度な機能 ===="
+"==== 6. 高度な機能 ===="
 
 "== データ構造の例 =="
 "組み込みのコレクション型はありません。"
 "Object を使って連結リストなどのデータ構造を自作できます。"
 Cell := fun(a,b,
-	cellClass := Object.clone()
-	cellClass.head := a
-	cellClass.tail := b
-	cellClass)
+  cellClass := Object.clone()
+  cellClass.head := a
+  cellClass.tail := b
+  cellClass)
 list := fun(i,n,
-	(i<n).if(
-		Cell(i,list(i+1,n)),
-		nil))
+  (i<n).if(
+    Cell(i,list(i+1,n)),
+    nil))
 sum := fun(lst,
-	(lst).if(
-		lst.head + sum(lst.tail),
-		0));
+  (lst).if(
+    lst.head + sum(lst.tail),
+    0))
 
 numbers := list(0,5)
 numbers.print(); "=> {head:0,tail:{head:1,...}} のようなオブジェクト構造を表示"
@@ -170,8 +211,8 @@ sum(numbers).print(); "=> 10"
 "message() でコードをデータとして組み立て、evalNode() で実行できます。"
 "第1引数でレシーバ・呼び出しの有無を指定します（__ _@ @_ @@）。"
 "evalStr() は文字列をコードとして直接評価します。"
-evalNode(message("@@",5,"+",7)); "=> 12 （5+7 を動的に生成して評価）"
-evalStr("5+7"); "=> 12 （文字列をコードとして評価）"
+evalNode(message("@@",5,"+",7)).print(); "=> 12 （5+7 を動的に生成して評価）"
+evalStr("5+7").print(); "=> 12 （文字列をコードとして評価）"
 
 "== マクロ =="
 "macro() はマクロを定義します。関数と異なり、引数が評価されずに渡されます。"
