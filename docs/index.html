@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BinOp Playground</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #1e1e2e; color: #cdd6f4;
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 48px; padding: 32px;
+    }
+    .title { text-align: center; }
+    .title h1 { font-size: 2rem; font-weight: 700; color: #cba6f7; margin-bottom: 8px; }
+    .title p  { font-size: 0.95rem; color: #6c7086; max-width: 480px; line-height: 1.6; }
+    .cards {
+      display: flex; gap: 24px; flex-wrap: wrap; justify-content: center;
+    }
+    .card {
+      background: #181825; border: 1px solid #313244; border-radius: 12px;
+      padding: 28px 32px; width: 260px; text-decoration: none; color: inherit;
+      transition: border-color 0.15s, transform 0.15s;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .card:hover { border-color: #585b70; transform: translateY(-2px); }
+    .card .badge {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; padding: 2px 8px; border-radius: 4px;
+      display: inline-block; width: fit-content;
+    }
+    .card.go   .badge { background: #a6e3a1; color: #1e1e2e; }
+    .card.ts   .badge { background: #89b4fa; color: #1e1e2e; }
+    .card h2  { font-size: 1rem; font-weight: 600; }
+    .card p   { font-size: 0.8rem; color: #6c7086; line-height: 1.6; }
+    .card .tag {
+      font-size: 0.7rem; color: #45475a;
+      margin-top: auto; padding-top: 10px; border-top: 1px solid #313244;
+    }
+  </style>
+</head>
+<body>
+  <div class="title">
+    <h1>BinOp Playground</h1>
+    <p>二項演算子を中心に置いた動的型付け言語 BinOp のオンライン実行環境です。<br>
+       同一の言語仕様を持つ 2 つの実装から選べます。</p>
+  </div>
+
+  <div class="cards">
+    <a class="card go" href="go/">
+      <span class="badge">Go</span>
+      <h2>Compiler + VM</h2>
+      <p>ソースコードを中間命令列（IL）にコンパイルし、スタック VM で実行します。IL を表示して処理を追えます。</p>
+      <div class="tag">コンパイラ + スタック VM（WebAssembly）</div>
+    </a>
+
+    <a class="card ts" href="ts/">
+      <span class="badge">TypeScript</span>
+      <h2>Interpreter</h2>
+      <p>AST を直接走査して評価します。マクロ・メタプログラミングに対応しています。</p>
+      <div class="tag">CPS + トランポリン評価器</div>
+    </a>
+  </div>
+</body>
+</html>

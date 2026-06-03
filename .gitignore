@@ -1,15 +1,16 @@
-# Ignore built binaries for go-compiler-vm subprojects (ignore contents, keep bin folders tracked)
-# Keep the bin directory in git by tracking .gitkeep, but ignore build outputs inside it.
-go-compiler-vm/go-compiler/bin/*
-!go-compiler-vm/go-compiler/bin/.gitkeep
+# Go ビルド成果物
+go-compiler-vm/bin/*
+!go-compiler-vm/bin/.gitkeep
 
-# (optionally for VM if you plan to build there)
-go-compiler-vm/go-vm/bin/*
-!go-compiler-vm/go-vm/bin/.gitkeep
-
-# Node / TS artifacts (if using ts-interpreter)
+# Node / TypeScript ビルド成果物
 node_modules/
-dist/node_modules/
-dist/
-.DS_Store
+ts-interpreter/node_modules/
+ts-interpreter/dist/
 
+# CI が生成する docs/ 以下の成果物
+docs/go/binop.wasm
+docs/go/wasm_exec.js
+docs/ts/binop.js
+docs/ts/binop.js.map
+
+.DS_Store

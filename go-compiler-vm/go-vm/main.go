@@ -1,3 +1,5 @@
+//go:build !js
+
 // main.go — BinOp VM のエントリポイント。
 // ILテキスト（go-compilerの出力）を読み込み、VMで実行する。
 //
