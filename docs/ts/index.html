@@ -18,7 +18,8 @@
     }
     header h1 { font-size: 1rem; font-weight: 600; color: #89b4fa; }
     header p  { font-size: 0.8rem; color: #6c7086; }
-    header a  { margin-left: auto; font-size: 0.8rem; color: #89b4fa; text-decoration: none; }
+    .header-links { margin-left: auto; display: flex; gap: 14px; }
+    header a  { font-size: 0.8rem; color: #89b4fa; text-decoration: none; }
     header a:hover { text-decoration: underline; }
     main { flex: 1; display: flex; flex-direction: column; padding: 16px 24px; gap: 12px; }
     .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -70,7 +71,10 @@
 <header>
   <h1>BinOp Playground – TypeScript Interpreter</h1>
   <p>AST を直接走査して評価します（CPS + トランポリン）。</p>
-  <a href="../">← トップへ</a>
+  <div class="header-links">
+    <a href="../">← トップへ</a>
+    <a href="https://github.com/hoznas/binop-interpriter">リポジトリへ →</a>
+  </div>
 </header>
 <main>
   <div class="toolbar">

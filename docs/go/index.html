@@ -18,7 +18,8 @@
     }
     header h1 { font-size: 1rem; font-weight: 600; color: #a6e3a1; }
     header p  { font-size: 0.8rem; color: #6c7086; }
-    header a  { margin-left: auto; font-size: 0.8rem; color: #89b4fa; text-decoration: none; }
+    .header-links { margin-left: auto; display: flex; gap: 14px; }
+    header a  { font-size: 0.8rem; color: #89b4fa; text-decoration: none; }
     header a:hover { text-decoration: underline; }
     main { flex: 1; display: flex; flex-direction: column; padding: 16px 24px; gap: 12px; }
     .toolbar { display: flex; align-items: center; gap: 10px; }
@@ -59,7 +60,10 @@
 <header>
   <h1>BinOp Playground – Go Compiler+VM</h1>
   <p>ソースを IL にコンパイルしてからスタック VM で実行します。</p>
-  <a href="../">← トップへ</a>
+  <div class="header-links">
+    <a href="../">← トップへ</a>
+    <a href="https://github.com/hoznas/binop-interpriter">リポジトリへ →</a>
+  </div>
 </header>
 <main>
   <div class="toolbar">

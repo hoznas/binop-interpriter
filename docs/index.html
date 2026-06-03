@@ -10,6 +10,15 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: #1e1e2e; color: #cdd6f4;
       min-height: 100vh; display: flex; flex-direction: column;
+    }
+    header {
+      padding: 14px 24px; border-bottom: 1px solid #313244;
+      display: flex; justify-content: flex-end;
+    }
+    header a  { font-size: 0.8rem; color: #89b4fa; text-decoration: none; }
+    header a:hover { text-decoration: underline; }
+    .content {
+      flex: 1; display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 48px; padding: 32px;
     }
     .title { text-align: center; }
@@ -41,6 +50,10 @@
   </style>
 </head>
 <body>
+<header>
+  <a href="https://github.com/hoznas/binop-interpriter">リポジトリへ →</a>
+</header>
+<div class="content">
   <div class="title">
     <h1>BinOp Playground</h1>
     <p>二項演算子を中心に置いた動的型付け言語 BinOp のオンライン実行環境です。<br>
@@ -62,5 +75,6 @@
       <div class="tag">CPS + トランポリン評価器</div>
     </a>
   </div>
+</div>
 </body>
 </html>
