@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>BinOp Playground – TypeScript Interpreter</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -20,13 +21,14 @@
     header a  { margin-left: auto; font-size: 0.8rem; color: #89b4fa; text-decoration: none; }
     header a:hover { text-decoration: underline; }
     main { flex: 1; display: flex; flex-direction: column; padding: 16px 24px; gap: 12px; }
-    .toolbar { display: flex; align-items: center; gap: 10px; }
-    button#runBtn {
-      padding: 7px 20px; background: #89b4fa; color: #1e1e2e;
-      border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 600;
-      cursor: pointer; transition: opacity 0.15s;
+    .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    button {
+      padding: 7px 14px; border: none; border-radius: 6px;
+      font-size: 0.875rem; cursor: pointer; transition: opacity 0.15s;
     }
-    button#runBtn:hover { opacity: 0.85; }
+    button:hover { opacity: 0.85; }
+    #runBtn { background: #89b4fa; color: #1e1e2e; font-weight: 600; padding: 7px 20px; }
+    .btn-sec { background: #313244; color: #cdd6f4; }
     .panes {
       display: grid; grid-template-columns: 1fr 1fr;
       gap: 12px; flex: 1; min-height: 0;
@@ -44,8 +46,23 @@
     }
     textarea:focus { border-color: #585b70; }
     textarea[readonly] { color: #a6adc8; }
-    .error { color: #f38ba8; }
     #errorMsg { font-size: 0.8rem; color: #f38ba8; min-height: 1.2em; }
+    .share-wrap { position: relative; }
+    #popover-share {
+      display: none; position: absolute; left: 0; top: calc(100% + 6px);
+      width: 320px; background: #181825; border: 1px solid #313244;
+      border-radius: 8px; padding: 12px; z-index: 10;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+    #popover-share.open { display: block; }
+    #popover-share p { font-size: 0.75rem; color: #6c7086; margin-bottom: 8px; }
+    .share-row { display: flex; gap: 6px; }
+    #share-url {
+      flex: 1; min-width: 0; background: #1e1e2e; color: #cdd6f4;
+      border: 1px solid #313244; border-radius: 4px; padding: 6px 8px;
+      font-size: 0.75rem; font-family: monospace; outline: none;
+    }
+    #btn-copy-url { background: #89b4fa; color: #1e1e2e; font-weight: 600; padding: 6px 10px; font-size: 0.75rem; }
     @media (max-width: 600px) { .panes { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -57,7 +74,21 @@
 </header>
 <main>
   <div class="toolbar">
-    <button id="runBtn">実行</button>
+    <button id="runBtn">実行 ▶</button>
+    <button id="btn-undo" class="btn-sec">Undo</button>
+    <button id="btn-redo" class="btn-sec">Redo</button>
+    <button id="btn-clear" class="btn-sec">Clear</button>
+    <button id="btn-help" class="btn-sec">Help</button>
+    <div class="share-wrap">
+      <button id="btn-share" class="btn-sec">Share</button>
+      <div id="popover-share">
+        <p>このURLを送ると現在のコードを共有できます</p>
+        <div class="share-row">
+          <input id="share-url" type="text" readonly />
+          <button id="btn-copy-url">Copy</button>
+        </div>
+      </div>
+    </div>
   </div>
   <div class="panes">
     <div class="pane">
@@ -91,17 +122,71 @@ while(x < 3, x.print(); x = x + 1)</textarea>
 </main>
 <script src="binop.js"></script>
 <script>
+const sourceEl = document.getElementById("source");
+const resultEl = document.getElementById("result");
+const errorMsg = document.getElementById("errorMsg");
+
+const encoded = new URLSearchParams(location.search).get("code");
+if (encoded) {
+  const decoded = LZString.decompressFromEncodedURIComponent(encoded);
+  if (decoded) sourceEl.value = decoded;
+}
+
 document.getElementById("runBtn").addEventListener("click", () => {
-  const errorMsg = document.getElementById("errorMsg");
   errorMsg.textContent = "";
-  const source = document.getElementById("source").value;
+  const source = sourceEl.value;
+  history.pushState(null, "", location.pathname + "?code=" + LZString.compressToEncodedURIComponent(source));
   const { result, logs, error } = BinOp.evalCode(source);
   if (error) {
     errorMsg.textContent = "エラー: " + error;
-    document.getElementById("result").value = "";
+    resultEl.value = "";
   } else {
-    const lines = [...logs, result];
-    document.getElementById("result").value = lines.join("\n");
+    resultEl.value = [...logs, result].join("\n");
+  }
+});
+
+window.addEventListener("popstate", () => {
+  const enc = new URLSearchParams(location.search).get("code");
+  sourceEl.value = enc ? (LZString.decompressFromEncodedURIComponent(enc) ?? "") : "";
+});
+
+document.getElementById("btn-undo").addEventListener("click",  () => history.back());
+document.getElementById("btn-redo").addEventListener("click",  () => history.forward());
+
+document.getElementById("btn-clear").addEventListener("click", () => {
+  sourceEl.value = "";
+  resultEl.value = "";
+  errorMsg.textContent = "";
+});
+
+document.getElementById("btn-help").addEventListener("click", () => {
+  fetch("tutorial.bo")
+    .then(r => r.text())
+    .then(text => { resultEl.value = text; errorMsg.textContent = ""; })
+    .catch(() => { errorMsg.textContent = "tutorial.bo を読み込めませんでした"; });
+});
+
+const popoverShare = document.getElementById("popover-share");
+const shareUrlInput = document.getElementById("share-url");
+
+document.getElementById("btn-share").addEventListener("click", () => {
+  shareUrlInput.value = location.origin + location.pathname + "?code="
+    + LZString.compressToEncodedURIComponent(sourceEl.value);
+  popoverShare.classList.toggle("open");
+});
+
+document.getElementById("btn-copy-url").addEventListener("click", () => {
+  const btn = document.getElementById("btn-copy-url");
+  navigator.clipboard.writeText(shareUrlInput.value).then(() => {
+    btn.textContent = "Copied!";
+    setTimeout(() => { btn.textContent = "Copy"; }, 2000);
+  });
+});
+
+document.addEventListener("click", e => {
+  if (!document.getElementById("btn-share").contains(e.target) &&
+      !popoverShare.contains(e.target)) {
+    popoverShare.classList.remove("open");
   }
 });
 </script>

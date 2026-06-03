@@ -33,6 +33,7 @@ jobs:
           npm run build
           mkdir -p ../docs/ts
           cp dist/binop.js ../docs/ts/
+          cp ../tutorial.bo ../docs/ts/
 
       # ── go-compiler-vm を WASM ビルド ────────────────────
       - uses: actions/setup-go@v5
