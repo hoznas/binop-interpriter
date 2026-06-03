@@ -7,41 +7,14 @@ BinOp 言語の複数実装を収録したリポジトリ。
 
 **[▶ ブラウザで試す](https://hoznas.github.io/binop-interpriter/)**
 
-## 構成
+## 構成と実行方法
 
-| フォルダ                           | 説明                                 |
-| ---------------------------------- | ------------------------------------ |
-| [ts-interpreter/](ts-interpreter/) | TypeScript によるインタプリタ実装    |
-| [go-interpreter/](go-interpreter/) | Go によるインタプリタ実装            |
-| [go-compiler-vm/](go-compiler-vm/) | Go によるコンパイラ + スタックVM実装 |
+以下はプロジェクトの構成と、各実装の実行方法の案内です。詳細は用途に応じて該当 README を参照してください。
 
-## 各実装の実行方法
+| フォルダ                           | 説明                                 | ドキュメント |
+| ---------------------------------- | ------------------------------------ | ------------ |
+| [ts-interpreter/](ts-interpreter/) | TypeScript によるインタプリタ実装    | [README](ts-interpreter/README.md) |
+| [go-interpreter/](go-interpreter/) | Go によるインタプリタ実装            | [README](go-interpreter/README.md) |
+| [go-compiler-vm/](go-compiler-vm/) | Go によるコンパイラ + スタックVM実装 | [README](go-compiler-vm/README.md) |
 
-### ts-interpreter
-
-```bash
-cd ts-interpreter
-tsc && node main sample.bo   # サンプル実行
-tsc && node tests            # テスト実行
-```
-
-### go-interpreter
-
-```bash
-cd go-interpreter
-go run . ../sample.bo        # サンプル実行
-go test ./...                # テスト実行
-```
-
-### go-compiler-vm
-
-詳細は [go-compiler-vm/README.md](go-compiler-vm/README.md) を参照。
-
-```bash
-cd go-compiler-vm
-# ビルド
-(cd go-compiler && go build -o binop-compiler .)
-(cd go-vm && go build -o binop-vm .)
-# 実行
-go-compiler/binop-compiler ../sample.bo | go-vm/binop-vm
-```
+サンプルコードは [sample.bo](sample.bo) にあります。

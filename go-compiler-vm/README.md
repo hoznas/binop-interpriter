@@ -1,57 +1,51 @@
 # go-compiler-vm
 
-BinOp 言語のコンパイラと VM の Go 実装。
+BinOp のバイトコードコンパイラ + スタック VM 実装です。
 
-- **go-compiler** — ソースコードを中間言語 (IL) テキストにコンパイルする
-- **go-vm** — IL テキストを受け取りスタックマシンで実行する
-
-## 実行方法
-
-### ビルド
+## ビルド
 
 ```bash
-# コンパイラ
-cd go-compiler && go build -o binop-compiler .
-
-# VM
-cd go-vm && go build -o binop-vm .
+./build.sh
+# → bin/binop-compiler と bin/binop-vm が生成される
 ```
 
-### パイプライン実行（コンパイル → VM）
+## 実行
+
+### スクリプトで実行（推奨）
 
 ```bash
-binop-compiler sample.bo | binop-vm
+./run.sh ../sample.bo
 ```
 
-### VM 単体で直接実行（コンパイル+実行を一括）
+内部では `binop-compiler` の stdout を `binop-vm` の stdin にパイプしています。
+
+### 手動で実行
 
 ```bash
-binop-vm --source sample.bo
-```
+# パイプで実行
+./bin/binop-compiler sample.bo | ./bin/binop-vm
 
-### IL ファイルを直接 VM で実行
+# IL をファイルに出力してから実行
+./bin/binop-compiler sample.bo > out.il
+./bin/binop-vm out.il
 
-```bash
-binop-compiler sample.bo > out.il
-binop-vm out.il
-```
-
-### go run で実行（ビルド不要）
-
-```bash
-# コンパイルのみ（IL を stdout に出力）
-cd go-compiler && go run . sample.bo
-
-# パイプ
-cd go-compiler && go run . sample.bo | (cd ../go-vm && go run . )
-
-# ソース直接実行
-cd go-vm && go run . --source ../sample.bo
+# コンパイラの出力（IL テキスト）だけ確認
+./bin/binop-compiler sample.bo
 ```
 
 ## テスト
 
 ```bash
 cd go-compiler && go test ./...
-cd go-vm && go test ./...
+cd go-vm       && go test ./...
 ```
+
+## 構成
+
+```
+go-compiler/   BinOp ソース → IL テキスト（標準出力）
+go-vm/         IL テキスト（標準入力 or ファイル） → 実行
+bin/           ビルド済みバイナリ
+```
+
+詳細は [OVERVIEW.md](OVERVIEW.md) を参照。
