@@ -64,26 +64,31 @@
     textarea[readonly] { color: #a6adc8; }
     #errorMsg { font-size: 0.8rem; color: #f38ba8; min-height: 1.2em; }
     #status { font-size: 0.8rem; color: #6c7086; }
-    /* Share dropdown */
+    /* Share popover */
     .share-wrap { position: relative; }
-    .share-dropdown {
+    .share-popover {
       display: none; position: absolute; left: 0; top: calc(100% + 6px);
-      background: #181825; border: 1px solid #313244; border-radius: 8px;
-      overflow: hidden; z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-      min-width: 180px;
+      width: 320px; background: #181825; border: 1px solid #313244;
+      border-radius: 8px; padding: 12px; z-index: 10;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
     }
-    .share-dropdown p {
-      font-size: 0.75rem; color: #6c7086;
-      padding: 10px 14px 6px; border-bottom: 1px solid #313244;
+    .share-popover.open { display: block; }
+    .share-popover > p { font-size: 0.75rem; color: #6c7086; margin-bottom: 10px; }
+    .share-group { margin-bottom: 8px; }
+    .share-group:last-child { margin-bottom: 0; }
+    .share-group-label { font-size: 0.7rem; color: #6c7086; margin-bottom: 4px; }
+    .share-row { display: flex; gap: 6px; }
+    .share-url-input {
+      flex: 1; min-width: 0; background: #1e1e2e; color: #cdd6f4;
+      border: 1px solid #313244; border-radius: 4px; padding: 6px 8px;
+      font-size: 0.75rem; font-family: monospace; outline: none;
     }
-    .share-dropdown.open { display: block; }
-    .share-dropdown button {
-      display: block; width: 100%; text-align: left;
-      padding: 9px 14px; background: transparent; color: #cdd6f4;
-      border-radius: 0; font-size: 0.85rem;
+    .share-url-input:disabled { opacity: 0.45; }
+    .btn-copy-share {
+      background: #89b4fa; color: #1e1e2e; font-weight: 600;
+      padding: 6px 10px; font-size: 0.75rem; border-radius: 6px; flex-shrink: 0;
     }
-    .share-dropdown button:hover:not(:disabled) { background: #313244; opacity: 1; }
-    .share-dropdown button:disabled { color: #45475a; }
+    .btn-copy-share:disabled { opacity: 0.45; cursor: not-allowed; }
     @media (max-width: 800px) { .panes, .panes.il-hidden { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -112,10 +117,22 @@
     <button id="btn-help"  class="btn-sec">Help</button>
     <div class="share-wrap">
       <button id="btn-share" class="btn-sec">Share</button>
-      <div class="share-dropdown" id="share-dropdown">
+      <div class="share-popover" id="share-dropdown">
         <p>このURLを送ると現在のコードを共有できます</p>
-        <button id="btn-share-binop">BinOp</button>
-        <button id="btn-share-full">BinOp+IL</button>
+        <div class="share-group">
+          <div class="share-group-label">BinOp</div>
+          <div class="share-row">
+            <input id="share-url-binop" class="share-url-input" type="text" readonly />
+            <button id="btn-copy-binop" class="btn-copy-share">Copy</button>
+          </div>
+        </div>
+        <div class="share-group">
+          <div class="share-group-label">BinOp+IL</div>
+          <div class="share-row">
+            <input id="share-url-full" class="share-url-input" type="text" readonly />
+            <button id="btn-copy-full" class="btn-copy-share">Copy</button>
+          </div>
+        </div>
       </div>
     </div>
     <div class="toolbar-sep"></div>
@@ -268,41 +285,43 @@ counter().print()</textarea>
     });
   });
 
-  // Share dropdown
-  const shareDropdown = document.getElementById("share-dropdown");
-  const shareFull     = document.getElementById("btn-share-full");
+  // Share popover
+  const sharePopover  = document.getElementById("share-dropdown");
+  const shareUrlBinop = document.getElementById("share-url-binop");
+  const shareUrlFull  = document.getElementById("share-url-full");
+  const btnCopyBinop  = document.getElementById("btn-copy-binop");
+  const btnCopyFull   = document.getElementById("btn-copy-full");
 
   document.getElementById("btn-share").addEventListener("click", () => {
-    shareFull.disabled = ilEl.value.trim() === "";
-    shareDropdown.classList.toggle("open");
-  });
-
-  function copyShareURL(url) {
-    navigator.clipboard.writeText(url).then(() => {
-      const btn = document.getElementById("btn-share");
-      btn.textContent = "Copied!";
-      setTimeout(() => { btn.textContent = "Share"; }, 2000);
-    });
-    shareDropdown.classList.remove("open");
-  }
-
-  document.getElementById("btn-share-binop").addEventListener("click", () => {
-    const url = location.origin + location.pathname + "?code="
+    const hasIL = ilEl.value.trim() !== "";
+    shareUrlBinop.value = location.origin + location.pathname + "?code="
       + LZString.compressToEncodedURIComponent(sourceEl.value);
-    copyShareURL(url);
+    shareUrlFull.value    = hasIL
+      ? location.origin + location.pathname
+        + "?code=" + LZString.compressToEncodedURIComponent(sourceEl.value)
+        + "&il="   + LZString.compressToEncodedURIComponent(ilEl.value)
+      : "";
+    shareUrlFull.disabled = !hasIL;
+    btnCopyFull.disabled  = !hasIL;
+    sharePopover.classList.toggle("open");
   });
 
-  shareFull.addEventListener("click", () => {
-    const url = location.origin + location.pathname
-      + "?code=" + LZString.compressToEncodedURIComponent(sourceEl.value)
-      + "&il="   + LZString.compressToEncodedURIComponent(ilEl.value);
-    copyShareURL(url);
-  });
+  function makeCopyBtn(btnEl, inputEl) {
+    btnEl.addEventListener("click", () => {
+      navigator.clipboard.writeText(inputEl.value).then(() => {
+        const orig = btnEl.textContent;
+        btnEl.textContent = "Copied!";
+        setTimeout(() => { btnEl.textContent = orig; }, 2000);
+      });
+    });
+  }
+  makeCopyBtn(btnCopyBinop, shareUrlBinop);
+  makeCopyBtn(btnCopyFull,  shareUrlFull);
 
   document.addEventListener("click", e => {
     if (!document.getElementById("btn-share").contains(e.target) &&
-        !shareDropdown.contains(e.target)) {
-      shareDropdown.classList.remove("open");
+        !sharePopover.contains(e.target)) {
+      sharePopover.classList.remove("open");
     }
   });
 })();
