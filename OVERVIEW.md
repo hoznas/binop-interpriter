@@ -23,15 +23,14 @@ factorial := fun(n,
 factorial(5).print()  "=> 120"
 ```
 
-## 3つの実装
+## 2つの実装
 
-このリポジトリには、**同一言語仕様**を持つ 3 つの独立した実装が含まれます。
+このリポジトリには、**同一言語仕様**を持つ 2 つの独立した実装が含まれます。
 
-| ディレクトリ | 言語 | 実装方式 | 詳細 |
-|---|---|---|---|
+| ディレクトリ      | 言語       | 実装方式                             | 詳細                                      |
+| ----------------- | ---------- | ------------------------------------ | ----------------------------------------- |
 | `ts-interpreter/` | TypeScript | CPS + トランポリンによる木走査評価器 | [OVERVIEW.md](ts-interpreter/OVERVIEW.md) |
-| `go-interpreter/` | Go | 直接再帰による木走査評価器 | [OVERVIEW.md](go-interpreter/OVERVIEW.md) |
-| `go-compiler-vm/` | Go | バイトコードコンパイラ + スタック VM | [OVERVIEW.md](go-compiler-vm/OVERVIEW.md) |
+| `go-compiler-vm/` | Go         | バイトコードコンパイラ + スタック VM | [OVERVIEW.md](go-compiler-vm/OVERVIEW.md) |
 
 すべての実装は以下の共通パイプラインを持ちます:
 
@@ -43,32 +42,29 @@ factorial(5).print()  "=> 120"
 
 詳細は [LANGUAGE.md](LANGUAGE.md) と [bo.bnf](bo.bnf) を参照してください。
 
-| 機能 | 説明 |
-|---|---|
-| データ型 | 数値（float64）、文字列、nil、関数、マクロ、ユーザーオブジェクト |
-| 演算子優先度 | `.` > `* / %` > `+ -` > 比較 > `== !=` > `&& \|\|` > `:= =` > ユーザー定義 > `;` > `,` |
-| オブジェクト | プロトタイプベース（`Object.clone()` で派生） |
-| クロージャ | `fun(args, body)` で生成、定義時の環境をキャプチャ |
-| マクロ | `macro(args, body)` で生成（インタープリタのみ） |
-| メタプログラミング | `message()`, `evalNode()`, `evalStr()`（インタープリタのみ） |
+| 機能               | 説明                                                                                   |
+| ------------------ | -------------------------------------------------------------------------------------- |
+| データ型           | 数値（float64）、文字列、nil、関数、マクロ、ユーザーオブジェクト                       |
+| 演算子優先度       | `.` > `* / %` > `+ -` > 比較 > `== !=` > `&& \|\|` > `:= =` > ユーザー定義 > `;` > `,` |
+| オブジェクト       | プロトタイプベース（`Object.clone()` で派生）                                          |
+| クロージャ         | `fun(args, body)` で生成、定義時の環境をキャプチャ                                     |
+| マクロ             | `macro(args, body)` で生成（インタープリタのみ）                                       |
+| メタプログラミング | `message()`, `evalNode()`, `evalStr()`（インタープリタのみ）                           |
 
 ## 実行方法
 
 ### TypeScript インタープリタ
+
 ```bash
 cd ts-interpreter
 tsc && node main ../sample.bo
 tsc && node tests
 ```
 
-### Go インタープリタ
-```bash
-cd go-interpreter
-go run . ../sample.bo
-go test ./...
-```
+
 
 ### Go コンパイラ + VM
+
 ```bash
 cd go-compiler-vm
 cd go-compiler && go build -o binop-compiler . && cd ..

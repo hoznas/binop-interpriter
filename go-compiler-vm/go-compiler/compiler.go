@@ -100,7 +100,7 @@ func compileMessage(mes *Message, state *CompilerState) {
 
 	// --- 特殊形式: macro は go-compiler-vm では未サポート ---
 	if mes.SlotName == "macro" && mes.Receiver == nil {
-		panic("ERROR: macro is not supported in go-compiler-vm. Use ts-interpreter or go-interpreter instead.")
+		panic("ERROR: macro is not supported in go-compiler-vm. Use ts-interpreter instead.")
 	}
 
 	// --- receiverありのメッセージ ---

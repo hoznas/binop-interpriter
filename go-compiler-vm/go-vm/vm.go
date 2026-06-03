@@ -205,7 +205,7 @@ func (vm *VM) executeFrame(instructions []Instruction, env *Memory) BoObject {
 			continue
 
 		case OP_MAKE_MACRO:
-			panic("ERROR VM: macro is not supported in go-compiler-vm. Use ts-interpreter or go-interpreter instead.")
+			panic("ERROR VM: macro is not supported in go-compiler-vm. Use ts-interpreter instead.")
 
 		case OP_END_FUN, OP_END_MACRO:
 			// extractBody でスキップされるので通常ここには来ない
@@ -310,7 +310,7 @@ func (vm *VM) callFunction(this *UserObject, f BoObject, args []BoObject) BoObje
 	case *Fun:
 		return vm.callFun(this, fn, args)
 	case *Macro:
-		panic("ERROR VM: macro is not supported in go-compiler-vm. Use ts-interpreter or go-interpreter instead.")
+		panic("ERROR VM: macro is not supported in go-compiler-vm. Use ts-interpreter instead.")
 	case *BuiltinFunction:
 		var recv BoObject
 		if this != nil {
