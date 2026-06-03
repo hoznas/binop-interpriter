@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>BinOp Playground – Go Compiler+VM</title>
   <script src="wasm_exec.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -22,20 +23,30 @@
     header a  { font-size: 0.8rem; color: #89b4fa; text-decoration: none; }
     header a:hover { text-decoration: underline; }
     main { flex: 1; display: flex; flex-direction: column; padding: 16px 24px; gap: 12px; }
-    .toolbar { display: flex; align-items: center; gap: 10px; }
-    button#runBtn {
-      padding: 7px 20px; background: #a6e3a1; color: #1e1e2e;
-      border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 600;
-      cursor: pointer; transition: opacity 0.15s;
+    .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    button {
+      padding: 7px 14px; border: none; border-radius: 6px;
+      font-size: 0.875rem; cursor: pointer; transition: opacity 0.15s;
     }
-    button#runBtn:disabled { opacity: 0.45; cursor: not-allowed; }
-    button#runBtn:not(:disabled):hover { opacity: 0.85; }
-    #status { font-size: 0.8rem; color: #6c7086; }
+    button:hover { opacity: 0.85; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button:disabled:hover { opacity: 0.45; }
+    #btn-run { background: #a6e3a1; color: #1e1e2e; font-weight: 600; padding: 7px 20px; }
+    .btn-sec { background: #313244; color: #cdd6f4; }
+    .btn-copy-small {
+      padding: 2px 8px; font-size: 0.7rem; background: #313244; color: #6c7086;
+      border-radius: 4px; cursor: pointer; transition: opacity 0.15s;
+    }
+    .btn-copy-small:hover { opacity: 0.85; }
+    .toolbar-sep { width: 1px; height: 20px; background: #45475a; margin: 0 2px; }
     .panes {
-      display: grid; grid-template-columns: 1fr 1fr 1fr;
-      gap: 12px; flex: 1; min-height: 0;
+      display: grid; gap: 12px; flex: 1; min-height: 0;
+      grid-template-columns: 1fr 1fr 1fr;
     }
+    .panes.il-hidden { grid-template-columns: 1fr 1fr; }
     .pane { display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+    .pane.hidden { display: none; }
+    .pane-header { display: flex; align-items: center; gap: 8px; }
     .pane-label {
       font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
       letter-spacing: 0.05em; color: #6c7086;
@@ -53,7 +64,24 @@
     textarea:focus { border-color: #585b70; }
     textarea[readonly] { color: #a6adc8; }
     #errorMsg { font-size: 0.8rem; color: #f38ba8; min-height: 1.2em; }
-    @media (max-width: 800px) { .panes { grid-template-columns: 1fr; } }
+    #status { font-size: 0.8rem; color: #6c7086; }
+    .share-wrap { position: relative; }
+    #popover-share {
+      display: none; position: absolute; left: 0; top: calc(100% + 6px);
+      width: 320px; background: #181825; border: 1px solid #313244;
+      border-radius: 8px; padding: 12px; z-index: 10;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+    #popover-share.open { display: block; }
+    #popover-share p { font-size: 0.75rem; color: #6c7086; margin-bottom: 8px; }
+    .share-row { display: flex; gap: 6px; }
+    #share-url {
+      flex: 1; min-width: 0; background: #1e1e2e; color: #cdd6f4;
+      border: 1px solid #313244; border-radius: 4px; padding: 6px 8px;
+      font-size: 0.75rem; font-family: monospace; outline: none;
+    }
+    #btn-copy-url { background: #89b4fa; color: #1e1e2e; font-weight: 600; padding: 6px 10px; font-size: 0.75rem; }
+    @media (max-width: 800px) { .panes, .panes.il-hidden { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -67,12 +95,34 @@
 </header>
 <main>
   <div class="toolbar">
-    <button id="runBtn" disabled>読み込み中...</button>
+    <button id="btn-compile" class="btn-sec" disabled>コンパイル</button>
+    <button id="btn-run-il" class="btn-sec" disabled>IL 実行</button>
+    <button id="btn-run" disabled>コンパイル＆実行 ▶</button>
     <span id="status"></span>
+    <div class="toolbar-sep"></div>
+    <button id="btn-undo" class="btn-sec">Undo</button>
+    <button id="btn-redo" class="btn-sec">Redo</button>
+    <button id="btn-clear" class="btn-sec">Clear</button>
+    <button id="btn-help" class="btn-sec">Help</button>
+    <div class="toolbar-sep"></div>
+    <button id="btn-toggle-il" class="btn-sec">IL 非表示</button>
+    <div class="share-wrap">
+      <button id="btn-share" class="btn-sec">Share</button>
+      <div id="popover-share">
+        <p>このURLを送ると現在のコードを共有できます</p>
+        <div class="share-row">
+          <input id="share-url" type="text" readonly />
+          <button id="btn-copy-url">Copy</button>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="panes">
+  <div class="panes" id="panes">
     <div class="pane">
-      <div class="pane-label">BinOp ソース</div>
+      <div class="pane-header">
+        <div class="pane-label">BinOp ソース</div>
+        <button class="btn-copy-small" data-target="source">Copy</button>
+      </div>
       <textarea id="source" spellcheck="false">factorial := fun(n,
   (n>1).if(n * factorial(n-1), 1))
 factorial(5).print()
@@ -82,12 +132,17 @@ counter := makeCounter()
 counter().print()
 counter().print()</textarea>
     </div>
-    <div class="pane">
-      <div class="pane-label">中間命令列 <span>IL（コンパイラ出力）</span></div>
-      <textarea id="il" readonly spellcheck="false"></textarea>
+    <div class="pane" id="pane-il">
+      <div class="pane-header">
+        <div class="pane-label">中間命令列 <span>IL（コンパイラ出力）</span></div>
+        <button class="btn-copy-small" data-target="il">Copy</button>
+      </div>
+      <textarea id="il" spellcheck="false"></textarea>
     </div>
     <div class="pane">
-      <div class="pane-label">実行結果</div>
+      <div class="pane-header">
+        <div class="pane-label">実行結果</div>
+      </div>
       <textarea id="result" readonly spellcheck="false"></textarea>
     </div>
   </div>
@@ -95,9 +150,20 @@ counter().print()</textarea>
 </main>
 <script>
 (async () => {
-  const runBtn   = document.getElementById("runBtn");
-  const status   = document.getElementById("status");
-  const errorMsg = document.getElementById("errorMsg");
+  const compileBtn = document.getElementById("btn-compile");
+  const runILBtn   = document.getElementById("btn-run-il");
+  const runBtn     = document.getElementById("btn-run");
+  const status     = document.getElementById("status");
+  const errorMsg   = document.getElementById("errorMsg");
+  const sourceEl   = document.getElementById("source");
+  const ilEl       = document.getElementById("il");
+  const resultEl   = document.getElementById("result");
+
+  const encoded = new URLSearchParams(location.search).get("code");
+  if (encoded) {
+    const decoded = LZString.decompressFromEncodedURIComponent(encoded);
+    if (decoded) sourceEl.value = decoded;
+  }
 
   status.textContent = "binop.wasm を読み込み中...";
   try {
@@ -109,23 +175,120 @@ counter().print()</textarea>
       throw new Error("WASM から関数を取得できませんでした");
     }
     status.textContent = "";
-    runBtn.textContent = "実行";
+    runBtn.textContent = "コンパイル＆実行 ▶";
     runBtn.disabled = false;
+    compileBtn.disabled = false;
+    runILBtn.disabled = false;
   } catch (e) {
     runBtn.textContent = "読み込み失敗";
     status.textContent = e.message;
     return;
   }
 
+  function pushHistory() {
+    history.pushState(null, "", location.pathname + "?code="
+      + LZString.compressToEncodedURIComponent(sourceEl.value));
+  }
+
+  compileBtn.addEventListener("click", () => {
+    errorMsg.textContent = "";
+    try {
+      pushHistory();
+      ilEl.value = binopCompile(sourceEl.value);
+    } catch (e) {
+      errorMsg.textContent = "エラー: " + e.message;
+    }
+  });
+
+  runILBtn.addEventListener("click", () => {
+    errorMsg.textContent = "";
+    try {
+      resultEl.value = binopRunIL(ilEl.value);
+    } catch (e) {
+      errorMsg.textContent = "エラー: " + e.message;
+    }
+  });
+
   runBtn.addEventListener("click", () => {
     errorMsg.textContent = "";
     try {
-      const il     = binopCompile(document.getElementById("source").value);
-      const output = binopRunIL(il);
-      document.getElementById("il").value     = il;
-      document.getElementById("result").value = output;
+      pushHistory();
+      const il = binopCompile(sourceEl.value);
+      ilEl.value = il;
+      resultEl.value = binopRunIL(il);
     } catch (e) {
       errorMsg.textContent = "エラー: " + e.message;
+    }
+  });
+
+  window.addEventListener("popstate", () => {
+    const enc = new URLSearchParams(location.search).get("code");
+    sourceEl.value = enc ? (LZString.decompressFromEncodedURIComponent(enc) ?? "") : "";
+  });
+
+  document.getElementById("btn-undo").addEventListener("click",  () => history.back());
+  document.getElementById("btn-redo").addEventListener("click",  () => history.forward());
+
+  document.getElementById("btn-clear").addEventListener("click", () => {
+    sourceEl.value = "";
+    ilEl.value = "";
+    resultEl.value = "";
+    errorMsg.textContent = "";
+  });
+
+  document.getElementById("btn-help").addEventListener("click", () => {
+    fetch("tutorial-no-macro.bo")
+      .then(r => r.text())
+      .then(text => { resultEl.value = text; errorMsg.textContent = ""; })
+      .catch(() => { errorMsg.textContent = "tutorial-no-macro.bo を読み込めませんでした"; });
+  });
+
+  // IL pane toggle
+  const panesEl   = document.getElementById("panes");
+  const paneIL    = document.getElementById("pane-il");
+  const toggleBtn = document.getElementById("btn-toggle-il");
+  let ilVisible = true;
+  toggleBtn.addEventListener("click", () => {
+    ilVisible = !ilVisible;
+    paneIL.classList.toggle("hidden", !ilVisible);
+    panesEl.classList.toggle("il-hidden", !ilVisible);
+    toggleBtn.textContent = ilVisible ? "IL 非表示" : "IL 表示";
+  });
+
+  // Copy buttons
+  document.querySelectorAll(".btn-copy-small").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const text = document.getElementById(btn.dataset.target).value;
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = "Copied!";
+        setTimeout(() => { btn.textContent = orig; }, 2000);
+      });
+    });
+  });
+
+  // Share popover
+  const popoverShare = document.getElementById("popover-share");
+  const shareUrlInput = document.getElementById("share-url");
+
+  document.getElementById("btn-share").addEventListener("click", () => {
+    shareUrlInput.value = location.origin + location.pathname + "?code="
+      + LZString.compressToEncodedURIComponent(sourceEl.value);
+    popoverShare.classList.toggle("open");
+  });
+
+  document.getElementById("btn-copy-url").addEventListener("click", () => {
+    const btn = document.getElementById("btn-copy-url");
+    navigator.clipboard.writeText(shareUrlInput.value).then(() => {
+      btn.textContent = "Copied!";
+      setTimeout(() => { btn.textContent = "Copy"; }, 2000);
+    });
+  });
+
+  document.addEventListener("click", e => {
+    if (!document.getElementById("btn-share").contains(e.target) &&
+        !popoverShare.contains(e.target)) {
+      popoverShare.classList.remove("open");
     }
   });
 })();
