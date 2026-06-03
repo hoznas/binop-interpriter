@@ -28,17 +28,16 @@
       padding: 7px 14px; border: none; border-radius: 6px;
       font-size: 0.875rem; cursor: pointer; transition: opacity 0.15s;
     }
-    button:hover { opacity: 0.85; }
+    button:hover:not(:disabled) { opacity: 0.85; }
     button:disabled { opacity: 0.45; cursor: not-allowed; }
-    button:disabled:hover { opacity: 0.45; }
-    #btn-run { background: #a6e3a1; color: #1e1e2e; font-weight: 600; padding: 7px 20px; }
-    .btn-sec { background: #313244; color: #cdd6f4; }
+    .btn-primary { background: #a6e3a1; color: #1e1e2e; font-weight: 600; }
+    .btn-sec     { background: #313244; color: #cdd6f4; }
     .btn-copy-small {
       padding: 2px 8px; font-size: 0.7rem; background: #313244; color: #6c7086;
       border-radius: 4px; cursor: pointer; transition: opacity 0.15s;
     }
     .btn-copy-small:hover { opacity: 0.85; }
-    .toolbar-sep { width: 1px; height: 20px; background: #45475a; margin: 0 2px; }
+    .toolbar-sep { width: 1px; height: 20px; background: #45475a; margin: 0 2px; flex-shrink: 0; }
     .panes {
       display: grid; gap: 12px; flex: 1; min-height: 0;
       grid-template-columns: 1fr 1fr 1fr;
@@ -65,22 +64,22 @@
     textarea[readonly] { color: #a6adc8; }
     #errorMsg { font-size: 0.8rem; color: #f38ba8; min-height: 1.2em; }
     #status { font-size: 0.8rem; color: #6c7086; }
+    /* Share dropdown */
     .share-wrap { position: relative; }
-    #popover-share {
+    .share-dropdown {
       display: none; position: absolute; left: 0; top: calc(100% + 6px);
-      width: 320px; background: #181825; border: 1px solid #313244;
-      border-radius: 8px; padding: 12px; z-index: 10;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      background: #181825; border: 1px solid #313244; border-radius: 8px;
+      overflow: hidden; z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      min-width: 140px;
     }
-    #popover-share.open { display: block; }
-    #popover-share p { font-size: 0.75rem; color: #6c7086; margin-bottom: 8px; }
-    .share-row { display: flex; gap: 6px; }
-    #share-url {
-      flex: 1; min-width: 0; background: #1e1e2e; color: #cdd6f4;
-      border: 1px solid #313244; border-radius: 4px; padding: 6px 8px;
-      font-size: 0.75rem; font-family: monospace; outline: none;
+    .share-dropdown.open { display: block; }
+    .share-dropdown button {
+      display: block; width: 100%; text-align: left;
+      padding: 9px 14px; background: transparent; color: #cdd6f4;
+      border-radius: 0; font-size: 0.85rem;
     }
-    #btn-copy-url { background: #89b4fa; color: #1e1e2e; font-weight: 600; padding: 6px 10px; font-size: 0.75rem; }
+    .share-dropdown button:hover:not(:disabled) { background: #313244; opacity: 1; }
+    .share-dropdown button:disabled { color: #45475a; }
     @media (max-width: 800px) { .panes, .panes.il-hidden { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -95,32 +94,32 @@
 </header>
 <main>
   <div class="toolbar">
-    <button id="btn-compile" class="btn-sec" disabled>コンパイル</button>
-    <button id="btn-run-il" class="btn-sec" disabled>IL 実行</button>
-    <button id="btn-run" disabled>コンパイル＆実行 ▶</button>
+    <!-- IL visible only -->
+    <button id="btn-compile" class="btn-sec"     disabled>Compile</button>
+    <button id="btn-run-il"  class="btn-primary" disabled>Run</button>
+    <!-- IL hidden only -->
+    <button id="btn-run"     class="btn-primary" disabled style="display:none">Run</button>
     <span id="status"></span>
     <div class="toolbar-sep"></div>
-    <button id="btn-undo" class="btn-sec">Undo</button>
-    <button id="btn-redo" class="btn-sec">Redo</button>
+    <!-- Always -->
+    <button id="btn-undo"  class="btn-sec">Undo</button>
+    <button id="btn-redo"  class="btn-sec">Redo</button>
     <button id="btn-clear" class="btn-sec">Clear</button>
-    <button id="btn-help" class="btn-sec">Help</button>
-    <div class="toolbar-sep"></div>
-    <button id="btn-toggle-il" class="btn-sec">IL 非表示</button>
+    <button id="btn-help"  class="btn-sec">Help</button>
     <div class="share-wrap">
       <button id="btn-share" class="btn-sec">Share</button>
-      <div id="popover-share">
-        <p>このURLを送ると現在のコードを共有できます</p>
-        <div class="share-row">
-          <input id="share-url" type="text" readonly />
-          <button id="btn-copy-url">Copy</button>
-        </div>
+      <div class="share-dropdown" id="share-dropdown">
+        <button id="btn-share-binop">BinOp</button>
+        <button id="btn-share-full">BinOp+IL</button>
       </div>
     </div>
+    <div class="toolbar-sep"></div>
+    <button id="btn-toggle-il" class="btn-sec">Hide IL</button>
   </div>
   <div class="panes" id="panes">
     <div class="pane">
       <div class="pane-header">
-        <div class="pane-label">BinOp ソース</div>
+        <div class="pane-label">BinOp Source</div>
         <button class="btn-copy-small" data-target="source">Copy</button>
       </div>
       <textarea id="source" spellcheck="false">factorial := fun(n,
@@ -134,14 +133,14 @@ counter().print()</textarea>
     </div>
     <div class="pane" id="pane-il">
       <div class="pane-header">
-        <div class="pane-label">中間命令列 <span>IL（コンパイラ出力）</span></div>
+        <div class="pane-label">IL <span>compiler output</span></div>
         <button class="btn-copy-small" data-target="il">Copy</button>
       </div>
       <textarea id="il" spellcheck="false"></textarea>
     </div>
     <div class="pane">
       <div class="pane-header">
-        <div class="pane-label">実行結果</div>
+        <div class="pane-label">Output</div>
       </div>
       <textarea id="result" readonly spellcheck="false"></textarea>
     </div>
@@ -159,28 +158,27 @@ counter().print()</textarea>
   const ilEl       = document.getElementById("il");
   const resultEl   = document.getElementById("result");
 
-  const encoded = new URLSearchParams(location.search).get("code");
-  if (encoded) {
-    const decoded = LZString.decompressFromEncodedURIComponent(encoded);
-    if (decoded) sourceEl.value = decoded;
-  }
+  // Restore from URL
+  const params = new URLSearchParams(location.search);
+  const encCode = params.get("code");
+  const encIL   = params.get("il");
+  if (encCode) { const d = LZString.decompressFromEncodedURIComponent(encCode); if (d) sourceEl.value = d; }
+  if (encIL)   { const d = LZString.decompressFromEncodedURIComponent(encIL);   if (d) ilEl.value = d; }
 
-  status.textContent = "binop.wasm を読み込み中...";
+  status.textContent = "Loading WASM...";
   try {
     const go = new Go();
     const { instance } = await WebAssembly.instantiateStreaming(fetch("binop.wasm"), go.importObject);
     go.run(instance);
     await new Promise(r => setTimeout(r, 0));
     if (typeof binopCompile !== "function" || typeof binopRunIL !== "function") {
-      throw new Error("WASM から関数を取得できませんでした");
+      throw new Error("Failed to load functions from WASM");
     }
     status.textContent = "";
-    runBtn.textContent = "コンパイル＆実行 ▶";
-    runBtn.disabled = false;
     compileBtn.disabled = false;
-    runILBtn.disabled = false;
+    runILBtn.disabled   = false;
+    runBtn.disabled     = false;
   } catch (e) {
-    runBtn.textContent = "読み込み失敗";
     status.textContent = e.message;
     return;
   }
@@ -195,18 +193,14 @@ counter().print()</textarea>
     try {
       pushHistory();
       ilEl.value = binopCompile(sourceEl.value);
-    } catch (e) {
-      errorMsg.textContent = "エラー: " + e.message;
-    }
+    } catch (e) { errorMsg.textContent = "Error: " + e.message; }
   });
 
   runILBtn.addEventListener("click", () => {
     errorMsg.textContent = "";
     try {
       resultEl.value = binopRunIL(ilEl.value);
-    } catch (e) {
-      errorMsg.textContent = "エラー: " + e.message;
-    }
+    } catch (e) { errorMsg.textContent = "Error: " + e.message; }
   });
 
   runBtn.addEventListener("click", () => {
@@ -216,9 +210,7 @@ counter().print()</textarea>
       const il = binopCompile(sourceEl.value);
       ilEl.value = il;
       resultEl.value = binopRunIL(il);
-    } catch (e) {
-      errorMsg.textContent = "エラー: " + e.message;
-    }
+    } catch (e) { errorMsg.textContent = "Error: " + e.message; }
   });
 
   window.addEventListener("popstate", () => {
@@ -230,9 +222,7 @@ counter().print()</textarea>
   document.getElementById("btn-redo").addEventListener("click",  () => history.forward());
 
   document.getElementById("btn-clear").addEventListener("click", () => {
-    sourceEl.value = "";
-    ilEl.value = "";
-    resultEl.value = "";
+    sourceEl.value = ilEl.value = resultEl.value = "";
     errorMsg.textContent = "";
   });
 
@@ -240,7 +230,7 @@ counter().print()</textarea>
     fetch("tutorial-no-macro.bo")
       .then(r => r.text())
       .then(text => { resultEl.value = text; errorMsg.textContent = ""; })
-      .catch(() => { errorMsg.textContent = "tutorial-no-macro.bo を読み込めませんでした"; });
+      .catch(() => { errorMsg.textContent = "Error: tutorial-no-macro.bo not found"; });
   });
 
   // IL pane toggle
@@ -248,12 +238,18 @@ counter().print()</textarea>
   const paneIL    = document.getElementById("pane-il");
   const toggleBtn = document.getElementById("btn-toggle-il");
   let ilVisible = true;
-  toggleBtn.addEventListener("click", () => {
-    ilVisible = !ilVisible;
+
+  function setILVisible(v) {
+    ilVisible = v;
     paneIL.classList.toggle("hidden", !ilVisible);
     panesEl.classList.toggle("il-hidden", !ilVisible);
-    toggleBtn.textContent = ilVisible ? "IL 非表示" : "IL 表示";
-  });
+    toggleBtn.textContent = ilVisible ? "Hide IL" : "Show IL";
+    compileBtn.style.display = ilVisible ? "" : "none";
+    runILBtn.style.display   = ilVisible ? "" : "none";
+    runBtn.style.display     = ilVisible ? "none" : "";
+  }
+
+  toggleBtn.addEventListener("click", () => setILVisible(!ilVisible));
 
   // Copy buttons
   document.querySelectorAll(".btn-copy-small").forEach(btn => {
@@ -267,28 +263,41 @@ counter().print()</textarea>
     });
   });
 
-  // Share popover
-  const popoverShare = document.getElementById("popover-share");
-  const shareUrlInput = document.getElementById("share-url");
+  // Share dropdown
+  const shareDropdown = document.getElementById("share-dropdown");
+  const shareFull     = document.getElementById("btn-share-full");
 
   document.getElementById("btn-share").addEventListener("click", () => {
-    shareUrlInput.value = location.origin + location.pathname + "?code="
-      + LZString.compressToEncodedURIComponent(sourceEl.value);
-    popoverShare.classList.toggle("open");
+    shareFull.disabled = ilEl.value.trim() === "";
+    shareDropdown.classList.toggle("open");
   });
 
-  document.getElementById("btn-copy-url").addEventListener("click", () => {
-    const btn = document.getElementById("btn-copy-url");
-    navigator.clipboard.writeText(shareUrlInput.value).then(() => {
+  function copyShareURL(url) {
+    navigator.clipboard.writeText(url).then(() => {
+      const btn = document.getElementById("btn-share");
       btn.textContent = "Copied!";
-      setTimeout(() => { btn.textContent = "Copy"; }, 2000);
+      setTimeout(() => { btn.textContent = "Share"; }, 2000);
     });
+    shareDropdown.classList.remove("open");
+  }
+
+  document.getElementById("btn-share-binop").addEventListener("click", () => {
+    const url = location.origin + location.pathname + "?code="
+      + LZString.compressToEncodedURIComponent(sourceEl.value);
+    copyShareURL(url);
+  });
+
+  shareFull.addEventListener("click", () => {
+    const url = location.origin + location.pathname
+      + "?code=" + LZString.compressToEncodedURIComponent(sourceEl.value)
+      + "&il="   + LZString.compressToEncodedURIComponent(ilEl.value);
+    copyShareURL(url);
   });
 
   document.addEventListener("click", e => {
     if (!document.getElementById("btn-share").contains(e.target) &&
-        !popoverShare.contains(e.target)) {
-      popoverShare.classList.remove("open");
+        !shareDropdown.contains(e.target)) {
+      shareDropdown.classList.remove("open");
     }
   });
 })();
