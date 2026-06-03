@@ -70,7 +70,11 @@
       display: none; position: absolute; left: 0; top: calc(100% + 6px);
       background: #181825; border: 1px solid #313244; border-radius: 8px;
       overflow: hidden; z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-      min-width: 140px;
+      min-width: 180px;
+    }
+    .share-dropdown p {
+      font-size: 0.75rem; color: #6c7086;
+      padding: 10px 14px 6px; border-bottom: 1px solid #313244;
     }
     .share-dropdown.open { display: block; }
     .share-dropdown button {
@@ -86,7 +90,7 @@
 <body>
 <header>
   <h1>BinOp Playground – Go Compiler+VM</h1>
-  <p>ソースを IL にコンパイルしてからスタック VM で実行します。</p>
+  <p>ソースを IL(中間言語) にコンパイルしてからスタック VM で実行します。</p>
   <div class="header-links">
     <a href="../">← トップへ</a>
     <a href="https://github.com/hoznas/binop-interpriter">リポジトリへ →</a>
@@ -109,6 +113,7 @@
     <div class="share-wrap">
       <button id="btn-share" class="btn-sec">Share</button>
       <div class="share-dropdown" id="share-dropdown">
+        <p>このURLを送ると現在のコードを共有できます</p>
         <button id="btn-share-binop">BinOp</button>
         <button id="btn-share-full">BinOp+IL</button>
       </div>
