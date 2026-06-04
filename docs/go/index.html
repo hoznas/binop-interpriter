@@ -228,6 +228,7 @@ counter().print()</textarea>
     try {
       pushHistory();
       ilEl.value = binopCompile(sourceEl.value);
+      runILBtn.disabled = ilEl.value.trim() === "";
     } catch (e) { errorMsg.textContent = "Error: " + e.message; }
   });
 
@@ -244,6 +245,7 @@ counter().print()</textarea>
       pushHistory();
       const il = binopCompile(sourceEl.value);
       ilEl.value = il;
+      runILBtn.disabled = false;
       resultEl.value = binopRunIL(il);
     } catch (e) { errorMsg.textContent = "Error: " + e.message; }
   });
