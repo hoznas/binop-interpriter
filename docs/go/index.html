@@ -180,6 +180,17 @@ counter().print()</textarea>
   const ilEl       = document.getElementById("il");
   const resultEl   = document.getElementById("result");
 
+  document.querySelectorAll("textarea:not([readonly])").forEach(ta => {
+    ta.addEventListener("keydown", e => {
+      if (e.key === "Tab") {
+        e.preventDefault();
+        const s = ta.selectionStart, end = ta.selectionEnd;
+        ta.value = ta.value.slice(0, s) + "  " + ta.value.slice(end);
+        ta.selectionStart = ta.selectionEnd = s + 2;
+      }
+    });
+  });
+
   // Restore from URL
   const params = new URLSearchParams(location.search);
   const encCode = params.get("code");

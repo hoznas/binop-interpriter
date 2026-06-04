@@ -130,6 +130,17 @@ const sourceEl = document.getElementById("source");
 const resultEl = document.getElementById("result");
 const errorMsg = document.getElementById("errorMsg");
 
+document.querySelectorAll("textarea:not([readonly])").forEach(ta => {
+  ta.addEventListener("keydown", e => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const s = ta.selectionStart, end = ta.selectionEnd;
+      ta.value = ta.value.slice(0, s) + "  " + ta.value.slice(end);
+      ta.selectionStart = ta.selectionEnd = s + 2;
+    }
+  });
+});
+
 const encoded = new URLSearchParams(location.search).get("code");
 if (encoded) {
   const decoded = LZString.decompressFromEncodedURIComponent(encoded);
