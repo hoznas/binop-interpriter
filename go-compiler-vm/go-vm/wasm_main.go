@@ -26,9 +26,8 @@ func main() {
 		vm := NewVM(func(msg string) {
 			prints = append(prints, msg)
 		})
-		result := vm.RunIL(args[0].String())
-		parts := append(prints, result.Str())
-		return strings.Join(parts, "\n")
+		vm.RunIL(args[0].String())
+		return strings.Join(prints, "\n")
 	}))
 
 	select {} // JS 関数の登録を維持するため終了しない

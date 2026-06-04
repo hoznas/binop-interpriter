@@ -145,7 +145,7 @@ document.getElementById("runBtn").addEventListener("click", () => {
     errorMsg.textContent = "エラー: " + error;
     resultEl.value = "";
   } else {
-    resultEl.value = [...logs, result].join("\n");
+    resultEl.value = logs.join("\n");
   }
 });
 
