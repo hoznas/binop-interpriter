@@ -31,6 +31,7 @@
     button:hover:not(:disabled) { opacity: 0.85; }
     button:disabled { opacity: 0.45; cursor: not-allowed; }
     .btn-primary { background: #a6e3a1; color: #1e1e2e; font-weight: 600; }
+    .btn-blue    { background: #89b4fa; color: #1e1e2e; font-weight: 600; }
     .btn-sec     { background: #313244; color: #cdd6f4; }
     .btn-copy-small {
       padding: 2px 8px; font-size: 0.7rem; background: #313244; color: #6c7086;
@@ -104,7 +105,7 @@
 <main>
   <div class="toolbar">
     <!-- IL visible only -->
-    <button id="btn-compile" class="btn-sec"     disabled>Compile</button>
+    <button id="btn-compile" class="btn-blue"    disabled>Compile</button>
     <button id="btn-run-il"  class="btn-primary" disabled>Run</button>
     <!-- IL hidden only -->
     <button id="btn-run"     class="btn-primary" disabled style="display:none">Run</button>
@@ -209,8 +210,9 @@ counter().print()</textarea>
     }
     status.textContent = "";
     compileBtn.disabled = false;
-    runILBtn.disabled   = false;
+    runILBtn.disabled   = ilEl.value.trim() === "";
     runBtn.disabled     = false;
+    ilEl.addEventListener("input", () => { runILBtn.disabled = ilEl.value.trim() === ""; });
   } catch (e) {
     status.textContent = e.message;
     return;
